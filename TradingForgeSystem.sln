@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderForge.Domain", "TraderForge.Domain\TraderForge.Domain.csproj", "{86071D8D-14B9-472B-8F1C-D16D2E812284}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderForge.Application", "TraderForge.Application\TraderForge.Application.csproj", "{946A8F00-4A6D-4B9E-A288-5AEF2DBEE2E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderForge.Infrastructure", "TraderForge.Infrastructure\TraderForge.Infrastructure.csproj", "{8CF5D75B-009E-45D0-9121-69C92126942D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderForge.API", "TraderForge.API\TraderForge.API.csproj", "{A5A9F109-E301-450C-925D-5D4917CEEF26}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86071D8D-14B9-472B-8F1C-D16D2E812284}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86071D8D-14B9-472B-8F1C-D16D2E812284}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86071D8D-14B9-472B-8F1C-D16D2E812284}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86071D8D-14B9-472B-8F1C-D16D2E812284}.Release|Any CPU.Build.0 = Release|Any CPU
+		{946A8F00-4A6D-4B9E-A288-5AEF2DBEE2E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{946A8F00-4A6D-4B9E-A288-5AEF2DBEE2E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{946A8F00-4A6D-4B9E-A288-5AEF2DBEE2E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{946A8F00-4A6D-4B9E-A288-5AEF2DBEE2E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CF5D75B-009E-45D0-9121-69C92126942D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CF5D75B-009E-45D0-9121-69C92126942D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CF5D75B-009E-45D0-9121-69C92126942D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CF5D75B-009E-45D0-9121-69C92126942D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5A9F109-E301-450C-925D-5D4917CEEF26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5A9F109-E301-450C-925D-5D4917CEEF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5A9F109-E301-450C-925D-5D4917CEEF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5A9F109-E301-450C-925D-5D4917CEEF26}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
