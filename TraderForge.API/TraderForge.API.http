@@ -4,3 +4,13 @@ GET {{TraderForge.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+POST http://localhost:5116/api/identity/register
+Content-Type: application/json
+
+{
+  "email": "test5@traderforge.com",
+  "password": "SuperSecretPassword123!"
+}
+
+###

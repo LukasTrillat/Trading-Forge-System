@@ -7,22 +7,23 @@ namespace TraderForge.Application.Handlers;
 
 public class RegisterTraderCommandHandler
 {
-    private readonly IIdentityService IdentityService;
-    private readonly ITraderRepository TraderRepository;
+    private readonly IIdentityService _identityService;
+    private readonly ITraderRepository _traderRepository;
 
     public RegisterTraderCommandHandler(IIdentityService identityService, ITraderRepository traderRepository)
     {
-        IdentityService = identityService;
-        TraderRepository = traderRepository;
+        _identityService = identityService;
+        _traderRepository = traderRepository;
     }
 
     public async Task Handle(RegisterTraderCommand command)
     {
-        string newId = await IdentityService.RegisterUserAndReturnIdAsync(command.Email, command.Password);
+        string newId = await _identityService.RegisterUserAndReturnIdAsync(command.Email, command.Password);
         Trader newTrader = new Trader(newId, command.Email);
         newTrader.FreeTrialRegistrationDate = DateTime.UtcNow;
         newTrader.FreeTrialExpirationDate = DateTime.UtcNow.AddDays(7);
-        await TraderRepository.AddAsync(newTrader);
+        newTrader.UserName = command.Email;
+        await _traderRepository.AddAsync(newTrader);
     }
     
 }
