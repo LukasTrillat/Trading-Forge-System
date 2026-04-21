@@ -16,13 +16,13 @@ public class RegisterTraderCommandHandler
         TraderRepository = traderRepository;
     }
 
-    public void Handle(RegisterTraderCommand command)
+    public async Task Handle(RegisterTraderCommand command)
     {
-        IdentityService.RegisterUserAsync(command.Email, command.Password);
-        Trader newTrader = new Trader();
+        string newId = await IdentityService.RegisterUserAndReturnIdAsync(command.Email, command.Password);
+        Trader newTrader = new Trader(command.Email, newId);
         newTrader.FreeTrialRegistrationDate = DateTime.UtcNow;
         newTrader.FreeTrialExpirationDate = DateTime.UtcNow.AddDays(7);
-        TraderRepository.AddAsync(newTrader);
+        await TraderRepository.AddAsync(newTrader);
     }
     
 }
