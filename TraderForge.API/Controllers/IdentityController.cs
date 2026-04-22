@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TraderForge.Application.DTOs;
 using TraderForge.Application.Handlers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TraderForge.API.Controllers;
 
@@ -43,5 +44,12 @@ public class IdentityController : ControllerBase
 
         return Unauthorized(new { error = result.ErrorMessage });
 
+    }
+
+    [Authorize(Roles = "Trader")]
+    [HttpGet("vip-lounge")]
+    public IActionResult GetVipLounge()
+    {
+        return Ok(new { message = "Welcome to the Trade Lounge. The JWT token worked succesfully!" });
     }
 }

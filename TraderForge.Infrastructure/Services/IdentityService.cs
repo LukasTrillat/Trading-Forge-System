@@ -8,6 +8,7 @@ using System.Text;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Security.Claims;
 
 namespace TraderForge.Infrastructure.Services;
 
@@ -33,6 +34,7 @@ public class IdentityService : IIdentityService
 
         var result = await _userManager.CreateAsync(newApplicationUser, password);
         EnsureSuccessOrThrow(result);
+        await _userManager.AddClaimAsync(newApplicationUser, new Claim(ClaimTypes.Role, "Trader"));
     }
 
     private void EnsureSuccessOrThrow(IdentityResult result)
@@ -46,10 +48,10 @@ public class IdentityService : IIdentityService
 
     public async Task<string> GetValidatedTokenAsync(string email, string password)
     {
-        Account user = await GetApplicationUserByEmail(email, password);
-        if (await IsUserValidated(user,password))
+        Account user = await GetApplicationUserByEmailAsync(email, password);
+        if (await IsUserValidatedAsync(user,password))
         {
-            return GenerateJwtTokenForUser(user);
+            return await GenerateJwtTokenForUserAsync(user);
         }
         else
         {
@@ -58,7 +60,7 @@ public class IdentityService : IIdentityService
 
     }
 
-    private async Task<Account> GetApplicationUserByEmail(string email, string password)
+    private async Task<Account> GetApplicationUserByEmailAsync(string email, string password)
     {
         try
         {
@@ -70,42 +72,60 @@ public class IdentityService : IIdentityService
         }
     }
     
-    private async Task<bool> IsUserValidated(Account user, string password)
+    private async Task<bool> IsUserValidatedAsync(Account user, string password)
     {
         return await _userManager.CheckPasswordAsync(user, password);
     }
 
-    private string GenerateJwtTokenForUser(Account user)
+    private async Task<string> GenerateJwtTokenForUserAsync(Account user)
     {
-        string secret = _jwtConfiguration["JwtSettings:Secret"] ?? throw new Exception("JWT Secret is missing!");
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(await GenerateSecurityTokenDescriptorAsync(user));
+
+        return tokenHandler.WriteToken(token);
+    }
+
+    private async Task<SecurityTokenDescriptor> GenerateSecurityTokenDescriptorAsync(Account user)
+    {
         string issuer = _jwtConfiguration["JwtSettings:Issuer"] ?? throw new Exception("JWT Issuer is missing!");
         string audience = _jwtConfiguration["JwtSettings:Audience"] ?? throw new Exception("JWT Audience is missing!");
 
-        byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
-
-        var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!)
-        };
-            
-        var securityKey = new SymmetricSecurityKey(keyBytes);
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var descriptor = new SecurityTokenDescriptor
+        List<Claim> claims = await GetUserClaimsAsync(user);    
+        
+        return new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims), 
             Expires = DateTime.UtcNow.AddHours(2), 
             Issuer = issuer,                      
             Audience = audience,                 
-            SigningCredentials = credentials    
+            SigningCredentials = RetrieveSigningCredentials()
         };
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(descriptor);
-
-        return tokenHandler.WriteToken(token);
     }
+
+    private async Task<List<Claim>> GetUserClaimsAsync(Account user)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!)
+        };
+        var userClaims = await _userManager.GetClaimsAsync(user);
+        claims.AddRange(userClaims);
+
+        return claims;
+
+    }
+
+    private SigningCredentials RetrieveSigningCredentials()
+    {
+        string secret = _jwtConfiguration["JwtSettings:Secret"] ?? throw new Exception("JWT Secret is missing!");
+        byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
+        var securityKey = new SymmetricSecurityKey(keyBytes);
+        return new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        
+    }
+
+    
 
 
 }
