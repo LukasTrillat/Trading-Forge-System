@@ -9,25 +9,39 @@ namespace TraderForge.API.Controllers;
 public class IdentityController : ControllerBase
 {
     private readonly RegisterTraderCommandHandler _registerTraderCommandHandler;
+    private readonly LoginTraderQueryHandler _loginTraderQueryHandler;
 
-    public IdentityController(RegisterTraderCommandHandler registerTraderCommandHandler)
+    public IdentityController(RegisterTraderCommandHandler registerTraderCommandHandler, LoginTraderQueryHandler loginTraderQueryHandler)
     {
         _registerTraderCommandHandler = registerTraderCommandHandler;
+        _loginTraderQueryHandler = loginTraderQueryHandler;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterTraderCommand command)
     {
-        try
-        {
-            await _registerTraderCommandHandler.Handle(command);
-            return Ok(new { message = "Registration succesful! Enjoy your 7-Day free trial." });
 
-        }
-        catch (Exception ex)
+        var result = await _registerTraderCommandHandler.RegisterAsync(command);
+
+        if (result.IsSuccess)
         {
-            return BadRequest(new { error = ex.Message });
+            return Ok(new { message = "Registration succesful! Enjoy your 7-Day free trial." });
         }
-        
+
+        return BadRequest(new { error = result.ErrorMessage });
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginTraderQuery query)
+    {
+        var result = await _loginTraderQueryHandler.LoginAsync(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { token = result.Value });
+        }
+
+        return Unauthorized(new { error = result.ErrorMessage });
+
     }
 }

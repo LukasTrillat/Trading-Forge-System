@@ -17,7 +17,7 @@ public class TraderRepository : ITraderRepository
     public async Task AddAsync(Trader trader)
     {
         await _dbContext.Traders.AddAsync(trader);
-        await this.SaveChangesAsync();
+        await SaveChangesAsync();
     }
 
     public async Task SaveChangesAsync()

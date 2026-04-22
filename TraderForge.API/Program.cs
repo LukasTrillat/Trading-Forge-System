@@ -22,6 +22,7 @@ builder.Services.AddScoped<IIdentityService, IdentityService>();
 // -- Uncomment when Trader Repository is built -- //
 builder.Services.AddScoped<ITraderRepository, TraderRepository>();
 builder.Services.AddTransient<RegisterTraderCommandHandler>(); 
+builder.Services.AddTransient<LoginTraderQueryHandler>(); 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
