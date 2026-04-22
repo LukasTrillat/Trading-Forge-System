@@ -7,53 +7,58 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace TraderForge.Infrastructure.Services;
 
 public class IdentityService : IIdentityService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<Account> _userManager;
     private readonly IConfiguration _jwtConfiguration;
 
-    public IdentityService(UserManager<ApplicationUser> userManager, IConfiguration jwtConfiguration)
+    public IdentityService(UserManager<Account> userManager, IConfiguration jwtConfiguration)
     {
         _userManager = userManager;
         _jwtConfiguration = jwtConfiguration;
     }
 
-    public async Task<string> RegisterUserAndReturnIdAsync(string email, string password)
+    public async Task RegisterNewAccountAsync(string newUserId, string email, string password)
     {
-        var user = new ApplicationUser()
+        var newApplicationUser = new Account()
         {
+            Id = newUserId,
             UserName = email,
             Email = email
         };
 
-        var result = await _userManager.CreateAsync(user, password);
+        var result = await _userManager.CreateAsync(newApplicationUser, password);
+        EnsureSuccessOrThrow(result);
+    }
+
+    private void EnsureSuccessOrThrow(IdentityResult result)
+    {
         if (!result.Succeeded)
         {
             var errorMessage = result.Errors.FirstOrDefault()?.Description ?? "Unknown registration error";
             throw new Exception($"User registration failed: {errorMessage}");
         }
-
-        return user.Id;
     }
 
-    public async Task<string> LoginUserAndReturnJwtTokenAsync(string email, string password)
+    public async Task<string> GetValidatedTokenAsync(string email, string password)
     {
-        ApplicationUser user = await GetApplicationUserByEmail(email, password);
+        Account user = await GetApplicationUserByEmail(email, password);
         if (await IsUserValidated(user,password))
         {
             return GenerateJwtTokenForUser(user);
         }
         else
         {
-            throw new Exception("Invalid Credentials");
+            throw new Exception("Invalid Credentials, user not validated");
         }
 
     }
 
-    private async Task<ApplicationUser> GetApplicationUserByEmail(string email, string password)
+    private async Task<Account> GetApplicationUserByEmail(string email, string password)
     {
         try
         {
@@ -65,12 +70,12 @@ public class IdentityService : IIdentityService
         }
     }
     
-    private async Task<bool> IsUserValidated(ApplicationUser user, string password)
+    private async Task<bool> IsUserValidated(Account user, string password)
     {
         return await _userManager.CheckPasswordAsync(user, password);
     }
 
-    private string GenerateJwtTokenForUser(ApplicationUser user)
+    private string GenerateJwtTokenForUser(Account user)
     {
         string secret = _jwtConfiguration["JwtSettings:Secret"] ?? throw new Exception("JWT Secret is missing!");
         string issuer = _jwtConfiguration["JwtSettings:Issuer"] ?? throw new Exception("JWT Issuer is missing!");

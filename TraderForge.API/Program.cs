@@ -9,22 +9,23 @@ using TraderForge.Infrastructure.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // -- Configure ASP.NET Core Identity -- //
-builder.Services.AddIdentityCore<ApplicationUser>(options =>
+builder.Services.AddIdentityCore<Account>(options =>
 {
     options.User.RequireUniqueEmail = true;
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
 }).AddEntityFrameworkStores<ApplicationDbContext>();
 
+
 // - Register Services for the DEPENDENCY INJECTION - //
 builder.Services.AddScoped<IIdentityService, IdentityService>();
-
-// -- Uncomment when Trader Repository is built -- //
 builder.Services.AddScoped<ITraderRepository, TraderRepository>();
+builder.Services.AddScoped<IAdministratorRepository, AdministratorRepository>();
 builder.Services.AddTransient<RegisterTraderCommandHandler>(); 
 builder.Services.AddTransient<LoginTraderQueryHandler>(); 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+
 
 // -- Register database context -- //
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -34,6 +35,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // -- Initialize app -- //
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -41,6 +43,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 
 // Map your API endpoints or controllers here
 app.MapControllers();

@@ -18,18 +18,22 @@ public class LoginTraderQueryHandler
     }
 
 
-    public async Task<Result<string>> LoginAsync(LoginTraderQuery query)
+    public async Task<Result<string>> GetLoginTokenAsync(LoginTraderQuery query)
     {
         try
         {
-            string jwtToken = await _identityService.LoginUserAndReturnJwtTokenAsync(query.Email, query.Password);
-
-            return Result<string>.Success(jwtToken);
+            return await RequestTokenFromIdentity(query);
         }
         catch (Exception ex)
         {
             return Result<string>.Failure(ex.Message);
         }
+    }
+
+    private async Task<Result<string>> RequestTokenFromIdentity(LoginTraderQuery query)
+    {
+        string jwtToken = await _identityService.GetValidatedTokenAsync(query.Email, query.Password);
+        return Result<string>.Success(jwtToken);
     }
 
 }
