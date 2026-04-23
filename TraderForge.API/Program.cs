@@ -1,10 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using TraderForge.Infrastructure.Persistence;
+using TraderForge.Domain.Interfaces;
+using TraderForge.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
+builder.Services.AddMemoryCache();
+builder.Services.AddControllers();
+
+builder.Services.AddHttpClient<IMarketPriceFetcher, BinanceMarketPriceFetcher>();
+builder.Services.AddSingleton<IMarketPriceReader, CachedMarketPriceReader>();
+builder.Services.AddHostedService<MarketPollingService>();
 
 // Register database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -19,7 +27,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
 
 // Map your API endpoints or controllers here
-
 app.Run();
