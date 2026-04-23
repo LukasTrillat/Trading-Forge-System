@@ -1,6 +1,6 @@
 ﻿namespace TraderForge.Domain.Interfaces;
 
-public interface IMarketPriceFetcher
+public interface IMarketDataProvider
 {
     Task<Dictionary<string, decimal>> GetPricesAsync();
 }

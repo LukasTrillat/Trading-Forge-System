@@ -1,2 +1,6 @@
-﻿namespace TraderForge.Application.DTOs.Queries; 
-public record GetMarketPricesQuery(List<string> Symbols);
+﻿namespace TraderForge.Application.DTOs.Queries;
+
+public class GetMarketPricesQuery
+{
+    public List<string> Symbols { get; set; }
+}
