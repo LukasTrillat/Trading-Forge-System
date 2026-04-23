@@ -1,42 +1,31 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-<<<<<<< HEAD
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TraderForge.Domain.Constants;
 using TraderForge.Domain.Entities;
 using TraderForge.Domain.Interfaces;
 using TraderForge.Domain.Repositories;
-=======
-using Microsoft.Extensions.Hosting;
-using TraderForge.Domain.Constants;
-using TraderForge.Domain.Interfaces;
->>>>>>> 1f749f1f578782d90b80008a7c1162a3cc9a80ba
+
 namespace TraderForge.Infrastructure.Services;
 
 public class BackgroundMarketPollingService : BackgroundService
 {
-<<<<<<< HEAD
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IMarketDataProvider _dataProvider;
     private readonly IMemoryCache _cache; 
     
-    public BackgroundMarketPollingService(IServiceScopeFactory scopeRepository, IMarketDataProvider dataProvider, IMemoryCache cache)
+    public BackgroundMarketPollingService(
+        IServiceScopeFactory scopeFactory, 
+        IMarketDataProvider dataProvider, 
+        IMemoryCache cache)
     {
-        _scopeFactory = scopeRepository;
-=======
-    private readonly IMarketDataProvider _dataProvider;
-    private readonly IMemoryCache _cache; 
-
-    public BackgroundMarketPollingService(IMarketDataProvider dataProvider, IMemoryCache cache)
-    {
->>>>>>> 1f749f1f578782d90b80008a7c1162a3cc9a80ba
+        _scopeFactory = scopeFactory;
         _dataProvider = dataProvider;
         _cache = cache;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-<<<<<<< HEAD
         var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
 
         while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
@@ -82,20 +71,6 @@ public class BackgroundMarketPollingService : BackgroundService
                 };
 
                 await repository.AddAsync(asset);
-=======
-        var timer = new PeriodicTimer(TimeSpan.FromMinutes(0.1));
-
-        while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
-        {
-            try 
-            {
-                var allPrices = await _dataProvider.GetPricesAsync();
-                _cache.Set(CacheKeys.MarketPrices, allPrices, TimeSpan.FromMinutes(1));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Polling Error]: {ex.Message}");
->>>>>>> 1f749f1f578782d90b80008a7c1162a3cc9a80ba
             }
         }
     }

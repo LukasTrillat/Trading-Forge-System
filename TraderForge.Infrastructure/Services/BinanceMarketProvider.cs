@@ -1,22 +1,15 @@
 ﻿using System.Net.Http.Json;
 using System.Globalization;
 using TraderForge.Domain.Interfaces;
+
 namespace TraderForge.Infrastructure.Services;
 
-<<<<<<<< HEAD:TraderForge.Infrastructure/Services/BinanceMarketProvider.cs
 public class BinanceMarketProvider : IMarketDataProvider
-========
-public class BinanceMarketService : IMarketDataProvider
->>>>>>>> 1f749f1f578782d90b80008a7c1162a3cc9a80ba:TraderForge.Infrastructure/Services/BinanceMarketService.cs
 {
     private readonly HttpClient _client;
     private readonly string _baseUrl = "https://api.binance.com/api/v3/ticker/price";
     
-<<<<<<<< HEAD:TraderForge.Infrastructure/Services/BinanceMarketProvider.cs
     public BinanceMarketProvider(HttpClient client) => _client = client;
-========
-    public BinanceMarketService(HttpClient client) => _client = client;
->>>>>>>> 1f749f1f578782d90b80008a7c1162a3cc9a80ba:TraderForge.Infrastructure/Services/BinanceMarketService.cs
 
     public async Task<Dictionary<string, decimal>> GetPricesAsync()
     {
