@@ -11,6 +11,7 @@ public class Portfolio
     public string TraderId { get; private set; }
     public Trader Trader { get; private set; } = null!;
 
+    private Portfolio(){}
 
     public Portfolio(string traderId, decimal initialBalance)
     {

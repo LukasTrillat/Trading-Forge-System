@@ -32,7 +32,6 @@ builder.Services.AddControllers();
 // - Register JWT Authentication - //
 builder.Services.AddAuthentication(options =>
     {
-        // This tells ASP.NET to default to looking for a JWT token
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })

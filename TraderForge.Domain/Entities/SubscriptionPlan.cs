@@ -14,6 +14,8 @@ public class SubscriptionPlan
 
     public ICollection<Trader> Traders { get; private set; } = new List<Trader>();
     
+    private SubscriptionPlan(){}
+    
     public SubscriptionPlan(Guid id, string name, decimal monthlyPrice, decimal initialVirtualBalance, 
         int? maxActiveStrategies, int? maxActiveAssets, bool canModifyVirtualBalance)
     {
