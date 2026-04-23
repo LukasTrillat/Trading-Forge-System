@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TraderForge.Application.Handlers;
 using TraderForge.Infrastructure.Persistence;
 using TraderForge.Domain.Interfaces;
 using TraderForge.Infrastructure.Services;
@@ -9,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
+
+builder.Services.AddTransient<GetMarketPricesHandler>();
 
 builder.Services.AddHttpClient<IMarketPriceFetcher, BinanceMarketPriceFetcher>();
 builder.Services.AddSingleton<IMarketPriceReader, CachedMarketPriceReader>();

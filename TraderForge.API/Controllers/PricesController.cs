@@ -1,30 +1,25 @@
-﻿namespace TraderForge.API.Controllers;
-using TraderForge.Domain.Interfaces;
+﻿using TraderForge.Application.DTOs.Queries;
+using TraderForge.Application.Handlers;
+namespace TraderForge.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/prices")]
 public class PricesController : ControllerBase
 {
-    private readonly IMarketPriceReader _priceReader;
-    
-    public PricesController(IMarketPriceReader priceReader) => _priceReader = priceReader;
+    private readonly GetMarketPricesHandler _getMarketPricesHandler;
+    public PricesController(GetMarketPricesHandler getMarketPricesHandler) 
+    => _getMarketPricesHandler = getMarketPricesHandler;
     
     [HttpGet]
     public async Task<IActionResult> GetCurrentPrices()
     {
-        var allPrices = await _priceReader.GetPricesAsync();
+        // TEST //
+        var query = new GetMarketPricesQuery(["BTCUSDT", "ETHUSDT", "PAXGUSDT", "SOLUSDT"]);
+        //////////
+        var result = await _getMarketPricesHandler.GetMarketPricesAsync(query.Symbols);
 
-        ///// TEMPORAL TEST PRICES /////
-        var debugPrices = new List<string> { "BTCUSDT", "ETHUSDT", "PAXGUSDT", "SOLUSDT" };
-        ////////////////////////////////
-        
-        if (allPrices.Count == 0) return NotFound("[Empty pricing information]");
-        
-        var requestedPrices = allPrices
-            .Where(price => debugPrices.Contains(price.Key))
-            .ToDictionary(priceSymbol => priceSymbol.Key, priceValue => priceValue.Value);
-
-        return Ok(requestedPrices);
+        if (result.IsSuccess) return Ok(result.Value);
+        return NotFound(new { error = result.ErrorMessage });
     }
 }
