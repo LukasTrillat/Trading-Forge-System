@@ -1,6 +1,6 @@
 namespace TraderForge.Application.Common;
 
-public class Result<T>
+public class ResultGeneric<T>
 {
     public bool IsSuccess { get; set; }
     public T? Value { get; set; }
