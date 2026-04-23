@@ -10,17 +10,17 @@ public class GetMarketPricesQueryHandler
     
     public GetMarketPricesQueryHandler(IMarketService marketService) => _marketService = marketService;
     
-    public async Task<Result<Dictionary<string, decimal>>> GetMarketPricesAsync(GetMarketPricesQuery query)
+    public async Task<ResultGeneric<Dictionary<string, decimal>>> GetMarketPricesAsync(GetMarketPricesQuery query)
     {
         var symbols = query.Symbols;
         
         var allPrices = await _marketService.GetPricesAsync();
-        if (allPrices.Count == 0) return Result<Dictionary<string, decimal>>.Failure("No prices found.");
+        if (allPrices.Count == 0) return ResultGeneric<Dictionary<string, decimal>>.Failure("No prices found.");
         
         var requestedPrices = allPrices
             .Where(priceSymbol => symbols.Contains(priceSymbol.Key))
             .ToDictionary(priceValue => priceValue.Key, p => p.Value);
 
-        return Result<Dictionary<string, decimal>>.Success(requestedPrices);
+        return ResultGeneric<Dictionary<string, decimal>>.Success(requestedPrices);
     }
 }
