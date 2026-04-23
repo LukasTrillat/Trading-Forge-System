@@ -5,6 +5,15 @@ Accept: application/json
 
 ###
 
-## Obtain prices data
-GET {{TraderForge.API_HostAddress}}/api/prices?symbols=BTCUSDT,ETHUSDT
+### Get Market Prices via POST
+POST http://localhost:5116/api/prices
+Content-Type: application/json
 Accept: application/json
+
+{
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ]
+}

@@ -1,5 +1,7 @@
 ﻿using TraderForge.Domain.Interfaces;
 using TraderForge.Application.Common;
+using TraderForge.Application.DTOs.Queries;
+
 namespace TraderForge.Application.Handlers;
 
 public class GetMarketPricesQueryHandler
@@ -8,10 +10,12 @@ public class GetMarketPricesQueryHandler
     
     public GetMarketPricesQueryHandler(IMarketService marketService) => _marketService = marketService;
     
-    public async Task<Result<Dictionary<string, decimal>>> GetMarketPricesAsync(List<string> symbols)
+    public async Task<Result<Dictionary<string, decimal>>> GetMarketPricesAsync(GetMarketPricesQuery query)
     {
+        var symbols = query.Symbols;
+        
         var allPrices = await _marketService.GetPricesAsync();
-        if (allPrices.Count == 0) return new Result<Dictionary<string, decimal>>();
+        if (allPrices.Count == 0) return Result<Dictionary<string, decimal>>.Failure("No prices found.");
         
         var requestedPrices = allPrices
             .Where(priceSymbol => symbols.Contains(priceSymbol.Key))

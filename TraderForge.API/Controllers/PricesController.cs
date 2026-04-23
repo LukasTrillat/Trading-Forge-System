@@ -1,25 +1,31 @@
-﻿using TraderForge.Application.DTOs.Queries;
-using TraderForge.Application.Handlers;
-namespace TraderForge.API.Controllers;
+﻿// TraderForge.API/Controllers/PricesController.cs
 using Microsoft.AspNetCore.Mvc;
+using TraderForge.Application.DTOs.Queries;
+using TraderForge.Application.Handlers;
+
+namespace TraderForge.API.Controllers;
 
 [ApiController]
 [Route("api/prices")]
 public class PricesController : ControllerBase
 {
-    private readonly GetMarketPricesQueryHandler _getMarketPricesQueryHandler;
-    public PricesController(GetMarketPricesQueryHandler getMarketPricesQueryHandler) 
-    => _getMarketPricesQueryHandler = getMarketPricesQueryHandler;
-    
-    [HttpGet]
-    public async Task<IActionResult> GetCurrentPrices()
-    {
-        // TEST //
-        var query = new GetMarketPricesQuery(["BTCUSDT", "ETHUSDT", "PAXGUSDT", "SOLUSDT"]);
-        //////////
-        var result = await _getMarketPricesQueryHandler.GetMarketPricesAsync(query.Symbols);
+    private readonly GetMarketPricesQueryHandler _handler;
 
-        if (result.IsSuccess) return Ok(result.Value);
-        return NotFound(new { error = result.ErrorMessage });
+    public PricesController(GetMarketPricesQueryHandler handler)
+    {
+        _handler = handler;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GetPrices([FromBody] GetMarketPricesQuery query) 
+    {
+        if (query.Symbols == null || query.Symbols.Count == 0)
+        {
+            return BadRequest("You must provide at least one symbol.");
+        }
+
+        var result = await _handler.GetMarketPricesAsync(query); 
+        
+        return Ok(result.Value); 
     }
 }
