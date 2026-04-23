@@ -3,6 +3,8 @@
 GET {{TraderForge.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
+###
+
 ## Obtain prices data
 GET {{TraderForge.API_HostAddress}}/api/prices?symbols=BTCUSDT,ETHUSDT
 Accept: application/json
