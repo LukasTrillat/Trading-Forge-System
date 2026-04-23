@@ -14,6 +14,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 
 builder.Services.AddTransient<GetMarketPricesQueryHandler>();
+<<<<<<< HEAD
+=======
+
+builder.Services.AddHttpClient<IMarketDataProvider, BinanceMarketService>();
+builder.Services.AddSingleton<IMarketService, CacheMarketService>();
+builder.Services.AddHostedService<BackgroundMarketPollingService>();
+>>>>>>> 1f749f1f578782d90b80008a7c1162a3cc9a80ba
 
 // Register database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
