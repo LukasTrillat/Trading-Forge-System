@@ -45,11 +45,12 @@ public class IdentityController : ControllerBase
         return Unauthorized(new { error = result.ErrorMessage });
 
     }
-
+    
     [Authorize(Roles = "Trader")]
     [HttpGet("vip-lounge")]
     public IActionResult GetVipLounge()
     {
         return Ok(new { message = "Welcome to the Trade Lounge. The JWT token worked succesfully!" });
     }
+    
 }

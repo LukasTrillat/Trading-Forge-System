@@ -20,9 +20,24 @@ public class Trader
         Email = email;
     }
 
+
+    public void ChangeSubscriptionPlan(SubscriptionPlan newPlan)
+    {
+        AssignSubscriptionPlan(newPlan);
+        FreezeActivePortfolio();
+        Portfolios.Add(new Portfolio(Id, newPlan.InitialVirtualBalance));
+        
+    }
+    
     public void AssignSubscriptionPlan(SubscriptionPlan plan)
     {
         SubscriptionPlanId = plan.Id;
         SubscriptionPlan = plan;
+    }
+
+    private void FreezeActivePortfolio()
+    {
+        var activePortfolio = Portfolios.FirstOrDefault(p => p.IsActive);
+        if (activePortfolio != null){activePortfolio.FreezeSimulation();}
     }
 }

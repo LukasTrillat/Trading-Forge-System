@@ -59,6 +59,35 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 var app = builder.Build();
 
 
+// --- Identity Seeder Execution --- //
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        logger.LogInformation("Applying pending database migrations...");
+        
+        await context.Database.MigrateAsync(); 
+        
+        logger.LogInformation("Database migrations applied successfully.");
+
+        logger.LogInformation("Attempting to seed default Identity administrators...");
+        await TraderForge.Infrastructure.Persistence.Seeders.IdentitySeeder.SeedDefaultAdminsAsync(services, configuration);
+        logger.LogInformation("Identity seeding completed.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "A fatal error occurred during database migration or seeding.");
+    }
+}
+
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

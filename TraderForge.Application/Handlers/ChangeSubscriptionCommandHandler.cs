@@ -20,7 +20,7 @@ public class ChangeSubscriptionCommandHandler
     {
         try
         {
-            return await ExcecuteSubscriptionChange(command);
+            return await ExecuteSubscriptionChange(command);
         }
         catch (Exception ex)
         {
@@ -28,50 +28,25 @@ public class ChangeSubscriptionCommandHandler
         }
     }
 
-    public async Task<Result> ExcecuteSubscriptionChange(ChangeSubscriptionCommand command)
+    private async Task<Result> ExecuteSubscriptionChange(ChangeSubscriptionCommand command) 
     {
-        var trader = await GetTraderByIdAsync(command.TraderId);
-        FreezeActivePortfolio(trader);
-
-        var newSubscriptionPlan = await GetSubscriptionPlanByIdAsync(command.NewPlanId);
-        trader.AssignSubscriptionPlan(newSubscriptionPlan);
-        
-        Portfolio newPortfolio = new Portfolio(command.TraderId, newSubscriptionPlan.InitialVirtualBalance);
-        trader.Portfolios.Add(newPortfolio);
-            
-        await _traderRepository.SaveChangesAsync();
-            
-        return Result.Success();
-    }
-
-    private async Task<Trader> GetTraderByIdAsync(string traderId)
-    {
-        var trader = await _traderRepository.GetByIdAsync(traderId);
+        var trader = await _traderRepository.GetByIdAsync(command.TraderId);
         if (trader == null) 
         {
-            throw new Exception("Trader not found.");
+            return Result.Failure("Trader not found.");
         }
-        return trader;
-    }
 
-    private async Task<SubscriptionPlan> GetSubscriptionPlanByIdAsync(Guid id)
-    {
-        var plan = await _subscriptionPlanRepository.GetByIdAsync(id);
-        if (plan == null) 
+        var newSubscriptionPlan = await _subscriptionPlanRepository.GetByIdAsync(command.NewPlanId);
+        if (newSubscriptionPlan == null) 
         {
-            throw new Exception("Subscription Plan not found.");
+            return Result.Failure("Subscription Plan not found.");
         }
-        return plan;
-    }
 
-    private void FreezeActivePortfolio(Trader trader)
-    {
-        var activePortfolio = trader.Portfolios.FirstOrDefault(p => p.IsActive);
-    
-        if (activePortfolio != null)
-        {
-            activePortfolio.FreezeSimulation();
-        }
+        trader.ChangeSubscriptionPlan(newSubscriptionPlan);
+        
+        await _traderRepository.SaveChangesAsync();
+        
+        return Result.Success();
     }
 
 
