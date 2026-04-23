@@ -4,14 +4,14 @@ using TraderForge.Domain.Constants;
 using TraderForge.Domain.Interfaces;
 namespace TraderForge.Infrastructure.Services;
 
-public class MarketPollingService : BackgroundService
+public class BackgroundMarketPollingService : BackgroundService
 {
-    private readonly IMarketPriceFetcher _priceFetcher;
+    private readonly IMarketDataProvider _dataProvider;
     private readonly IMemoryCache _cache; 
 
-    public MarketPollingService(IMarketPriceFetcher priceFetcher, IMemoryCache cache)
+    public BackgroundMarketPollingService(IMarketDataProvider dataProvider, IMemoryCache cache)
     {
-        _priceFetcher = priceFetcher;
+        _dataProvider = dataProvider;
         _cache = cache;
     }
 
@@ -23,7 +23,7 @@ public class MarketPollingService : BackgroundService
         {
             try 
             {
-                var allPrices = await _priceFetcher.GetPricesAsync();
+                var allPrices = await _dataProvider.GetPricesAsync();
                 _cache.Set(CacheKeys.MarketPrices, allPrices, TimeSpan.FromMinutes(1));
             }
             catch (Exception ex)

@@ -2,15 +2,15 @@
 using TraderForge.Application.Common;
 namespace TraderForge.Application.Handlers;
 
-public class GetMarketPricesHandler
+public class GetMarketPricesQueryHandler
 {
-    private readonly IMarketPriceReader _priceReader;
+    private readonly IMarketService _marketService;
     
-    public GetMarketPricesHandler(IMarketPriceReader priceReader) => _priceReader = priceReader;
+    public GetMarketPricesQueryHandler(IMarketService marketService) => _marketService = marketService;
     
     public async Task<Result<Dictionary<string, decimal>>> GetMarketPricesAsync(List<string> symbols)
     {
-        var allPrices = await _priceReader.GetPricesAsync();
+        var allPrices = await _marketService.GetPricesAsync();
         if (allPrices.Count == 0) return new Result<Dictionary<string, decimal>>();
         
         var requestedPrices = allPrices

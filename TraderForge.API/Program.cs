@@ -11,11 +11,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 
-builder.Services.AddTransient<GetMarketPricesHandler>();
+builder.Services.AddTransient<GetMarketPricesQueryHandler>();
 
-builder.Services.AddHttpClient<IMarketPriceFetcher, BinanceMarketPriceFetcher>();
-builder.Services.AddSingleton<IMarketPriceReader, CachedMarketPriceReader>();
-builder.Services.AddHostedService<MarketPollingService>();
+builder.Services.AddHttpClient<IMarketDataProvider, BinanceMarketService>();
+builder.Services.AddSingleton<IMarketService, CacheMarketService>();
+builder.Services.AddHostedService<BackgroundMarketPollingService>();
 
 // Register database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

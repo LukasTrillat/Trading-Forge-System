@@ -3,12 +3,12 @@ using System.Globalization;
 using TraderForge.Domain.Interfaces;
 namespace TraderForge.Infrastructure.Services;
 
-public class BinanceMarketPriceFetcher : IMarketPriceFetcher
+public class BinanceMarketService : IMarketDataProvider
 {
     private readonly HttpClient _client;
     private readonly string _baseUrl = "https://api.binance.com/api/v3/ticker/price";
     
-    public BinanceMarketPriceFetcher(HttpClient client) => _client = client;
+    public BinanceMarketService(HttpClient client) => _client = client;
 
     public async Task<Dictionary<string, decimal>> GetPricesAsync()
     {

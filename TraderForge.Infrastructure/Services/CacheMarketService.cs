@@ -2,11 +2,11 @@
 using TraderForge.Domain.Constants;
 using TraderForge.Domain.Interfaces;
 
-public class CachedMarketPriceReader : IMarketPriceReader
+public class CacheMarketService : IMarketService
 {
     private readonly IMemoryCache _cache;
     
-    public CachedMarketPriceReader(IMemoryCache cache) => _cache = cache;
+    public CacheMarketService(IMemoryCache cache) => _cache = cache;
     
     public async Task<Dictionary<string, decimal>> GetPricesAsync()
     {
