@@ -40,13 +40,13 @@ export function RegisterPage() {
   const displayError = localError || error;
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col gap-5">
-      <div>
-        <h2 className="text-lg font-semibold text-neutral-100">Create account</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Start your 7-day free trial — no credit card required</p>
+    <div className="register-card">
+      <div className="register-header">
+        <h2 className="register-title">Create account</h2>
+        <p className="register-subtitle">Start your 7-day free trial — no credit card required</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="register-form">
         <Input
           id="email"
           label="Email"
@@ -79,9 +79,9 @@ export function RegisterPage() {
         />
 
         {password.length > 0 && (
-          <ul className="flex flex-col gap-1">
+          <ul className="register-password-rules">
             {passwordRules.map((r) => (
-              <li key={r.label} className={`flex items-center gap-2 text-xs ${r.ok ? 'text-emerald-400' : 'text-neutral-500'}`}>
+              <li key={r.label} className={`register-rule-item ${r.ok ? 'register-rule-item--valid' : 'register-rule-item--invalid'}`}>
                 <span>{r.ok ? '✓' : '○'}</span>
                 {r.label}
               </li>
@@ -90,20 +90,20 @@ export function RegisterPage() {
         )}
 
         {displayError && (
-          <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          <p className="register-error-message">
             {displayError}
           </p>
         )}
 
-        <Button type="submit" isLoading={isLoading} className="w-full">
+        <Button type="submit" isLoading={isLoading} className="register-submit-button">
           Create account
         </Button>
       </form>
 
-      <p className="text-center text-sm text-neutral-500">
+      <p className="register-footer-text">
         Already have an account?{' '}
-        <Link to="/login" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-          Sign in
+        <Link to="/login" className="register-login-link">
+          Sign in here
         </Link>
       </p>
     </div>

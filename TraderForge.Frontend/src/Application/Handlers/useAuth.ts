@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useAuthStore } from '../Store/authStore';
-import { IdentityService } from '../../Infrastructure/Services/IdentityService';
 import type { RegisterTraderCommand } from '../DTOs/Commands/RegisterTraderCommand';
 import type { LoginTraderQuery } from '../DTOs/Queries/LoginTraderQuery';
 
-const identityService = new IdentityService();
+// NOTE: We are intentionally NOT using IdentityService right now to avoid backend dependency
+// import { IdentityService } from '../../Infrastructure/Services/IdentityService';
+// const identityService = new IdentityService();
 
-/** Mirrors RegisterTraderCommandHandler + LoginTraderQueryHandler from the backend. */
 export function useAuth() {
   const { setToken, logout, isAuthenticated, trader } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -15,26 +15,35 @@ export function useAuth() {
   async function register(command: RegisterTraderCommand): Promise<boolean> {
     setIsLoading(true);
     setError(null);
-    const result = await identityService.register(command);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Mock successful registration
+    console.log('[MOCK AUTH] Registered:', command.email);
     setIsLoading(false);
-    if (!result.isSuccess) {
-      setError(result.errorMessage ?? 'Registration failed.');
-      return false;
-    }
     return true;
   }
 
   async function login(query: LoginTraderQuery): Promise<boolean> {
     setIsLoading(true);
     setError(null);
-    const result = await identityService.login(query);
-    setIsLoading(false);
-    if (!result.isSuccess) {
-      setError(result.errorMessage ?? 'Invalid credentials.');
-      return false;
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Mock successful login - just check if it's not empty for the mock
+    if (query.email && query.password) {
+      console.log('[MOCK AUTH] Logged in:', query.email);
+      // Se da la token al store de autenticación para simular que se inicia sesion
+      setToken('mock-jwt-token-for-' + query.email);
+      setIsLoading(false);
+      return true;
     }
-    setToken(result.value!);
-    return true;
+
+    setIsLoading(false);
+    setError('Invalid credentials.');
+    return false;
   }
 
   return { register, login, logout, isAuthenticated, trader, isLoading, error };
