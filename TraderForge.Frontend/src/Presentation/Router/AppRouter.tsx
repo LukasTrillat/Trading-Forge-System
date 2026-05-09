@@ -3,10 +3,10 @@ import { AppLayout } from '../Layouts/AppLayout';
 import { AuthLayout } from '../Layouts/AuthLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { LandingPage } from '../Pages/Landing/LandingPage';
-import { LoginPage } from '../Pages/Auth/LoginPage';
-import { RegisterPage } from '../Pages/Auth/RegisterPage';
 import { DashboardPage } from '../Pages/Dashboard/DashboardPage';
 import { PortfolioPage } from '../Pages/Portfolio/PortfolioPage';
+import { LoginPage } from '../Pages/Auth/LoginPage';
+import { RegisterPage } from '../Pages/Auth/RegisterPage';
 
 export function AppRouter() {
   return (
