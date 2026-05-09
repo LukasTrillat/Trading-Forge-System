@@ -39,7 +39,7 @@ jobs:
         run: |
           dotnet sonarscanner begin \
             /k:"lukas-trillat-macalusso_Trading-Forge-System" \
-            /o:"lukas-trillat-macalusso" \
+            /o:"tradingforge-sonarqube-key" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.host.url="https://sonarcloud.io"
           
