@@ -10,4 +10,8 @@
       <ProjectReference Include="..\TraderForge.Domain\TraderForge.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Interfaces\" />
+    </ItemGroup>
+
 </Project>

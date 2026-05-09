@@ -4,6 +4,7 @@ using TraderForge.Domain.Entities;
 using TraderForge.Domain.Interfaces;
 using TraderForge.Infrastructure.Persistence;
 using System.Linq;
+using TraderForge.Domain.Repositories;
 
 namespace TraderForge.Infrastructure.Repositories;
 
@@ -24,7 +25,31 @@ public class TraderRepository : ITraderRepository
 
     public async Task<Trader> GetByIdAsync(string id)
     {
+        return await _dbContext.Traders.FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<Trader> GetByIdWithSubscriptionPlanAsync(string id)
+    {
+        return await _dbContext.Traders.Include(t => t.SubscriptionPlan).FirstOrDefaultAsync(t => t.Id == id);
+    }
+    
+    public async Task<Trader> GetByIdWithPortfoliosAsync(string id)
+    {
         return await _dbContext.Traders.Include(t => t.Portfolios).FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<Trader> GetByIdWithAllAsync(string id)
+    {
+        return await _dbContext.Traders
+            .Include(t => t.SubscriptionPlan)
+            .Include(t => t.Portfolios)
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+    
+    public async Task<List<Trader>> GetExpiredTrialsAsync()
+    {
+        return await _dbContext.Traders
+            .Where(t => t.FreeTrialExpirationDate < DateTime.UtcNow && t.SubscriptionPlanId != null).ToListAsync();
     }
 
     public async Task SaveChangesAsync()

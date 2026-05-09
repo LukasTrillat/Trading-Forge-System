@@ -23,6 +23,11 @@ public class SubscriptionPlanRepository : ISubscriptionPlanRepository
     {
         return await _dbContext.SubscriptionPlans.ToListAsync();
     }
+
+    public async Task<SubscriptionPlan> GetByNameAsync(string subscriptionName)
+    {
+        return await _dbContext.SubscriptionPlans.FirstOrDefaultAsync(s => s.Name.ToLower() == subscriptionName.ToLower());
+    }
     
     public async Task SaveChangesAsync()
     {

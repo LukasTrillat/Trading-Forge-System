@@ -32,7 +32,7 @@ public class Trader
     public void AssignSubscriptionPlan(SubscriptionPlan plan)
     {
         SubscriptionPlanId = plan.Id;
-        SubscriptionPlan = plan;
+        //SubscriptionPlan = plan;
     }
 
     private void FreezeActivePortfolio()
@@ -40,4 +40,11 @@ public class Trader
         var activePortfolio = Portfolios.FirstOrDefault(p => p.IsActive);
         if (activePortfolio != null){activePortfolio.FreezeSimulation();}
     }
+
+    public void ClearSubscriptionPlan()
+    {
+        SubscriptionPlanId = null;
+        SubscriptionPlan = null;
+    }
+
 }

@@ -1,13 +1,16 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TraderForge.Application.Handlers;
+using TraderForge.Application.Interfaces;
 using TraderForge.Domain.Interfaces;
 using TraderForge.Infrastructure;
 using TraderForge.Infrastructure.Persistence;
 using TraderForge.Infrastructure.Repositories;
 using TraderForge.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TraderForge.Domain.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,10 +27,17 @@ builder.Services.AddIdentityCore<Account>(options =>
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<ITraderRepository, TraderRepository>();
 builder.Services.AddScoped<IAdministratorRepository, AdministratorRepository>();
+builder.Services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
 builder.Services.AddTransient<RegisterTraderCommandHandler>(); 
 builder.Services.AddTransient<LoginTraderQueryHandler>(); 
+builder.Services.AddTransient<ChangeSubscriptionCommandHandler>();
+builder.Services.AddTransient<GetAllPlansQueryHandler>();
+builder.Services.AddTransient<GetTraderPlanQueryHandler>();
+builder.Services.AddHostedService<TrialExpirationService>();
+builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 // - Register JWT Authentication - //
 builder.Services.AddAuthentication(options =>
@@ -52,7 +62,9 @@ builder.Services.AddAuthentication(options =>
 
 // -- Register database context -- //
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .EnableSensitiveDataLogging()
+        .LogTo(Console.WriteLine, LogLevel.Information));
 
 
 // -- Initialize app -- //

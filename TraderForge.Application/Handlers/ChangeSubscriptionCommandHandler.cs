@@ -2,6 +2,7 @@ using TraderForge.Application.Common;
 using TraderForge.Application.DTOs;
 using TraderForge.Domain.Entities;
 using TraderForge.Domain.Interfaces;
+using TraderForge.Domain.Repositories;
 
 namespace TraderForge.Application.Handlers;
 
@@ -30,7 +31,7 @@ public class ChangeSubscriptionCommandHandler
 
     private async Task<Result> ExecuteSubscriptionChange(ChangeSubscriptionCommand command) 
     {
-        var trader = await _traderRepository.GetByIdAsync(command.TraderId);
+        var trader = await _traderRepository.GetByIdWithAllAsync(command.TraderId);
         if (trader == null) 
         {
             return Result.Failure("Trader not found.");
