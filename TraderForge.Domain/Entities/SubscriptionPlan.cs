@@ -34,14 +34,16 @@ public class SubscriptionPlan
     public void Update(string newName, 
         decimal newMonthlyPrice, 
         decimal newInitialVirtualBalance, 
-        int newMaxActiveStrategies,
-        int newMaxActiveAssets)
+        int? newMaxActiveStrategies,
+        int? newMaxActiveAssets,
+        bool newCanModifyVirtualBalance)
     {
         Name = newName;
         MonthlyPrice = newMonthlyPrice;
         InitialVirtualBalance = newInitialVirtualBalance;
         MaxActiveAssets = newMaxActiveAssets;
         MaxActiveStrategies = newMaxActiveStrategies;
+        CanModifyVirtualBalance = newCanModifyVirtualBalance;
     }
     
     public bool HasUnlimitedStrategies() => MaxActiveStrategies == null;

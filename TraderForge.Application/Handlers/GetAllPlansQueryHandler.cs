@@ -12,16 +12,16 @@ public class GetAllPlansQueryHandler
     {
         _planRepository = planRepository;
     }
-    public async Task<Result<List<SubscriptionPlan>>> GetAllSubscriptionPlans(GetAllPlansQuery query)
+    public async Task<ResultGeneric<List<SubscriptionPlan>>> GetAllSubscriptionPlans(GetAllPlansQuery query)
     {
         try
         {
             var plans = await _planRepository.GetAllAsync();
-            return Result<List<SubscriptionPlan>>.Success(plans.ToList());
+            return ResultGeneric<List<SubscriptionPlan>>.Success(plans.ToList());
         }
         catch (Exception ex)
         {
-            return Result<List<SubscriptionPlan>>.Failure(ex.Message);
+            return ResultGeneric<List<SubscriptionPlan>>.Failure(ex.Message);
         }
     }
 }

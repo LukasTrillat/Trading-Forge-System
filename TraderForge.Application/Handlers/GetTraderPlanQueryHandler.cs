@@ -13,20 +13,20 @@ public class GetTraderPlanQueryHandler
     {
         _traderRepository = traderRepository;
     }
-    public async Task<Result<SubscriptionPlan?>> HandleAsync(GetTraderPlanQuery query)
+    public async Task<ResultGeneric<SubscriptionPlan?>> HandleAsync(GetTraderPlanQuery query)
     {
         try
         {
             var trader = await _traderRepository.GetByIdWithSubscriptionPlanAsync(query.TraderId);
             
             if (trader is null)
-                return Result<SubscriptionPlan?>.Failure("Trader not found.");
-            return Result<SubscriptionPlan?>.Success(trader.SubscriptionPlan);
+                return ResultGeneric<SubscriptionPlan?>.Failure("Trader not found.");
+            return ResultGeneric<SubscriptionPlan?>.Success(trader.SubscriptionPlan);
             
         }
         catch (Exception ex)
         {
-            return Result<SubscriptionPlan?>.Failure(ex.Message);
+            return ResultGeneric<SubscriptionPlan?>.Failure(ex.Message);
         }
     }
 }

@@ -14,6 +14,29 @@ using TraderForge.Domain.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -- Load adminCredentials.env for local development (Docker loads it via env_file) -- //
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "adminCredentials.env");
+if (!File.Exists(envPath))
+    envPath = Path.Combine(Directory.GetCurrentDirectory(), "adminCredentials.env");
+if (File.Exists(envPath))
+{
+    var envConfig = new Dictionary<string, string?>();
+    foreach (var line in File.ReadAllLines(envPath))
+    {
+        var trimmed = line.Trim();
+        if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith('#'))
+            continue;
+        var idx = trimmed.IndexOf('=', StringComparison.Ordinal);
+        if (idx > 0)
+        {
+            var key = trimmed[..idx].Replace("__", ":");
+            var value = trimmed[(idx + 1)..];
+            envConfig[key] = value;
+        }
+    }
+    builder.Configuration.AddInMemoryCollection(envConfig);
+}
+
 // -- Configure ASP.NET Core Identity -- //
 builder.Services.AddIdentityCore<Account>(options =>
 {
@@ -33,6 +56,9 @@ builder.Services.AddTransient<LoginTraderQueryHandler>();
 builder.Services.AddTransient<ChangeSubscriptionCommandHandler>();
 builder.Services.AddTransient<GetAllPlansQueryHandler>();
 builder.Services.AddTransient<GetTraderPlanQueryHandler>();
+builder.Services.AddTransient<CreatePlanCommandHandler>();
+builder.Services.AddTransient<UpdatePlanCommandHandler>();
+builder.Services.AddTransient<DeletePlanCommandHandler>();
 builder.Services.AddHostedService<TrialExpirationService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddOpenApi();
