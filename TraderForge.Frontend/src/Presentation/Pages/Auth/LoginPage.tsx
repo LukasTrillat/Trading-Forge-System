@@ -17,13 +17,13 @@ export function LoginPage() {
   }
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col gap-5">
-      <div>
-        <h2 className="text-lg font-semibold text-neutral-100">Sign in</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Access your trading simulation</p>
+    <div className="login-card">
+      <div className="login-header">
+        <h2 className="login-title">Sign in</h2>
+        <p className="login-subtitle">Access your trading simulation</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="login-form">
         <Input
           id="email"
           label="Email"
@@ -46,19 +46,19 @@ export function LoginPage() {
         />
 
         {error && (
-          <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          <p className="login-error-message">
             {error}
           </p>
         )}
 
-        <Button type="submit" isLoading={isLoading} className="w-full">
+        <Button type="submit" isLoading={isLoading} className="login-submit-button">
           Sign in
         </Button>
       </form>
 
-      <p className="text-center text-sm text-neutral-500">
+      <p className="login-footer-text">
         No account?{' '}
-        <Link to="/register" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+        <Link to="/register" className="login-register-link">
           Start your 7-day free trial
         </Link>
       </p>
