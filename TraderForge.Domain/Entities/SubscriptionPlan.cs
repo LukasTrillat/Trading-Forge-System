@@ -30,7 +30,19 @@ public class SubscriptionPlan
         MaxActiveAssets = maxActiveAssets;
         CanModifyVirtualBalance = canModifyVirtualBalance;
     }
-    
+
+    public void Update(string newName, 
+        decimal newMonthlyPrice, 
+        decimal newInitialVirtualBalance, 
+        int newMaxActiveStrategies,
+        int newMaxActiveAssets)
+    {
+        Name = newName;
+        MonthlyPrice = newMonthlyPrice;
+        InitialVirtualBalance = newInitialVirtualBalance;
+        MaxActiveAssets = newMaxActiveAssets;
+        MaxActiveStrategies = newMaxActiveStrategies;
+    }
     
     public bool HasUnlimitedStrategies() => MaxActiveStrategies == null;
     public bool HasUnlimitedAssets() => MaxActiveAssets == null;

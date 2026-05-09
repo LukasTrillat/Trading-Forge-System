@@ -28,6 +28,19 @@ public class SubscriptionPlanRepository : ISubscriptionPlanRepository
     {
         return await _dbContext.SubscriptionPlans.FirstOrDefaultAsync(s => s.Name.ToLower() == subscriptionName.ToLower());
     }
+
+    public async Task AddAsync(SubscriptionPlan newSubscriptionPlan)
+    {
+        await _dbContext.SubscriptionPlans.AddAsync(newSubscriptionPlan);
+        await SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var deletingPlan = await GetByIdAsync(id);
+        if (deletingPlan != null) _dbContext.Remove(deletingPlan);
+        await SaveChangesAsync();
+    }
     
     public async Task SaveChangesAsync()
     {

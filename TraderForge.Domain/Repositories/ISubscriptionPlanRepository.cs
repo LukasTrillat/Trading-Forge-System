@@ -10,5 +10,9 @@ public interface ISubscriptionPlanRepository
     
     Task<IEnumerable<SubscriptionPlan>> GetAllAsync();
 
+    Task AddAsync(SubscriptionPlan newSubscriptionPlan);
+
+    Task DeleteAsync(Guid id);
+
     Task SaveChangesAsync();
 }
