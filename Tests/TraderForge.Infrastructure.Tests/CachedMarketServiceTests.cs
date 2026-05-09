@@ -27,6 +27,15 @@ public class CachedMarketServiceTests
 
         _cache.Set(CacheKeys.MarketPrices, expectedPrices);
         var result = await _service.GetPricesAsync();
+
         Assert.Equal(expectedPrices, result);
+    }
+
+    [Fact]
+    public async Task GetPricesAsync_WhenCacheIsEmpty_ReturnsEmptyDictionary()
+    {
+        var result = await _service.GetPricesAsync();
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 }
