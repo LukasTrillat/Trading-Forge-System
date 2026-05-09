@@ -9,6 +9,7 @@ export interface Position {
   totalValue: number;
 }
 
+
 export interface Portfolio {
   traderId: string;
   virtualBalance: number;
