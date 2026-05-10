@@ -107,6 +107,7 @@ builder.Services.AddTransient<GetStrategiesQueryHandler>();
 builder.Services.AddTransient<GetPositionsQueryHandler>();
 builder.Services.AddTransient<GetTransactionsQueryHandler>();
 builder.Services.AddTransient<ResetSimulationCommandHandler>();
+builder.Services.AddTransient<GetOrdersQueryHandler>();
 builder.Services.AddHostedService<TrialExpirationService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddControllers().AddJsonOptions(options =>
