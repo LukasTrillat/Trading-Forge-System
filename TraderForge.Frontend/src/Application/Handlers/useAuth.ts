@@ -35,8 +35,16 @@ export function useAuth() {
     // Mock successful login - just check if it's not empty for the mock
     if (query.email && query.password) {
       console.log('[MOCK AUTH] Logged in:', query.email);
-      // Se da la token al store de autenticación para simular que se inicia sesion
+      // Se da la token al store de autenticaciÃ³n para simular que se inicia sesion
       setToken('mock-jwt-token-for-' + query.email);
+      
+      // MOCK ADMIN ACCOUNT
+      if (query.email === 'admin@traderforge.com' && query.password === 'admin123') {
+        useAuthStore.setState({ role: 'SystemAdmin' });
+      } else {
+        useAuthStore.setState({ role: 'Trader' });
+      }
+
       setIsLoading(false);
       return true;
     }

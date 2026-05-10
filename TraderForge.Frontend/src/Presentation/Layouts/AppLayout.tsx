@@ -1,6 +1,6 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useState } from 'react';
-import { LayoutDashboard, Briefcase, Bot, CreditCard, Clock, LogIn, LogOut } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Bot, CreditCard, Clock, LogIn, LogOut, Shield } from 'lucide-react';
 import { AlertBanner } from '../Components/Notifications/AlertBanner';
 import { useAuthStore } from '../../Application/Store/authStore';
 
@@ -13,7 +13,7 @@ const NAV_ITEMS = [
 ];
 
 export function AppLayout() {
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logout, role } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
@@ -49,6 +49,21 @@ export function AppLayout() {
               {label}
             </NavLink>
           ))}
+          {role === 'SystemAdmin' && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-red-500/10 text-red-400 font-medium'
+                    : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800'
+                }`
+              }
+            >
+              <Shield size={16} />
+              Admin
+            </NavLink>
+          )}
         </nav>
 
         <div className="p-4 border-t border-neutral-800 shrink-0">

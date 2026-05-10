@@ -6,6 +6,7 @@ import { PortfolioPage } from '../Pages/Portfolio/PortfolioPage';
 import { LoginPage } from '../Pages/Auth/LoginPage';
 import { RegisterPage } from '../Pages/Auth/RegisterPage';
 import { ProtectedView } from '../Components/ProtectedView';
+import { AdminPage } from '../Pages/Admin/AdminPage';
 
 export function AppRouter() {
   return (
@@ -19,9 +20,10 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/portfolio" element={<ProtectedView><PortfolioPage /></ProtectedView>} />
-          <Route path="/bots" element={<ProtectedView><div className="p-6 text-neutral-400">Bot Builder — coming soon</div></ProtectedView>} />
-          <Route path="/pending" element={<ProtectedView><div className="p-6 text-neutral-400">Pending Operations — coming soon</div></ProtectedView>} />
-          <Route path="/subscription" element={<ProtectedView><div className="p-6 text-neutral-400">Subscription — coming soon</div></ProtectedView>} />
+          <Route path="/bots" element={<ProtectedView><div className="p-6 text-neutral-400">Bot Builder â€” coming soon</div></ProtectedView>} />
+          <Route path="/pending" element={<ProtectedView><div className="p-6 text-neutral-400">Pending Operations â€” coming soon</div></ProtectedView>} />    
+          <Route path="/subscription" element={<ProtectedView><div className="p-6 text-neutral-400">Subscription â€” coming soon</div></ProtectedView>} />     
+          <Route path="/admin" element={<ProtectedView><AdminPage /></ProtectedView>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
