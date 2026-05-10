@@ -2,8 +2,8 @@ namespace TraderForge.Application.DTOs;
 
 public class AddPositionCommand
 {
-    public string TraderId { get; set; }
-    public string Symbol { get; set; }
-    public decimal Quantity { get; set; }
-    public decimal EntryPrice { get; set; }
+    public required string TraderId { get; set; }
+    public required string Symbol { get; set; }
+    public required decimal Quantity { get; set; }
+    public required decimal EntryPrice { get; set; }
 }

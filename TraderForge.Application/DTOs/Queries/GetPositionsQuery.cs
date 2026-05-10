@@ -2,5 +2,5 @@ namespace TraderForge.Application.DTOs;
 
 public class GetPositionsQuery
 {
-    public string TraderId { get; set; }
+    public required string TraderId { get; set; }
 }
