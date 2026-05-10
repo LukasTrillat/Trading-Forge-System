@@ -18,8 +18,10 @@ public class PortfolioController : ControllerBase
     private readonly GetPositionsQueryHandler _getAssetsHandler;
     private readonly CreateStrategyCommandHandler _createStrategyHandler;
     private readonly UpdateStrategyStateCommandHandler _updateStrategyStateHandler;
-    private readonly AddPositionCommandHandler _addAssetHandler;
-    private readonly RemovePositionCommandHandler _removeAssetHandler;
+    private readonly BuyPositionCommandHandler _addAssetHandler;
+    private readonly SellPositionCommandHandler _removeAssetHandler;
+    private readonly GetTransactionsQueryHandler _getTransactionsHandler;
+    private readonly ResetSimulationCommandHandler _resetSimulationHandler;
 
     public PortfolioController(
         GetActivePortfolioQueryHandler getPortfolioHandler,
@@ -27,8 +29,10 @@ public class PortfolioController : ControllerBase
         GetPositionsQueryHandler getAssetsHandler,
         CreateStrategyCommandHandler createStrategyHandler,
         UpdateStrategyStateCommandHandler updateStrategyStateHandler,
-        AddPositionCommandHandler addAssetHandler,
-        RemovePositionCommandHandler removeAssetHandler)
+        BuyPositionCommandHandler addAssetHandler,
+        SellPositionCommandHandler removeAssetHandler,
+        GetTransactionsQueryHandler getTransactionsHandler,
+        ResetSimulationCommandHandler resetSimulationHandler)
     {
         _getPortfolioHandler = getPortfolioHandler;
         _getStrategiesHandler = getStrategiesHandler;
@@ -37,6 +41,8 @@ public class PortfolioController : ControllerBase
         _updateStrategyStateHandler = updateStrategyStateHandler;
         _addAssetHandler = addAssetHandler;
         _removeAssetHandler = removeAssetHandler;
+        _getTransactionsHandler = getTransactionsHandler;
+        _resetSimulationHandler = resetSimulationHandler;
     }
 
     [HttpGet]
@@ -129,11 +135,41 @@ public class PortfolioController : ControllerBase
     [HttpDelete("assets/{id:guid}")]
     public async Task<IActionResult> RemoveAsset(Guid id)
     {
-        var result = await _removeAssetHandler.HandleAsync(new RemovePositionCommand { AssetId = id });
+        var result = await _removeAssetHandler.HandleAsync(new SellPositionCommand { PositionId = id });
 
         if (!result.IsSuccess)
             return BadRequest(new { error = result.ErrorMessage });
 
         return Ok(new { message = "Asset removed successfully." });
+    }
+
+    [HttpGet("transactions")]
+    public async Task<IActionResult> GetTransactions()
+    {
+        var traderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(traderId))
+            return Unauthorized(new { error = "Invalid token claims." });
+
+        var result = await _getTransactionsHandler.HandleAsync(new GetTransactionsQuery { TraderId = traderId });
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.ErrorMessage });
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("reset")]
+    public async Task<IActionResult> ResetSimulation()
+    {
+        var traderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(traderId))
+            return Unauthorized(new { error = "Invalid token claims." });
+
+        var command = new ResetSimulationCommand { TraderId = traderId };
+        var result = await _resetSimulationHandler.HandleAsync(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.ErrorMessage });
+
+        return Ok(new { message = "Simulation reset successfully." });
     }
 }

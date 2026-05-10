@@ -26,6 +26,13 @@ public class PositionRepository : IPositionRepository
         return await _dbContext.Positions.FirstOrDefaultAsync(a => a.Id == id);
     }
 
+    public async Task<Position?> GetByIdWithPortfolioAsync(Guid id)
+    {
+        return await _dbContext.Positions
+            .Include(p => p.Portfolio)
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
     public async Task AddAsync(Position asset)
     {
         await _dbContext.Positions.AddAsync(asset);

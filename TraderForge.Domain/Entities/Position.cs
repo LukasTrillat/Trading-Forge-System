@@ -23,4 +23,11 @@ public class Position
         PortfolioId = portfolioId;
         CreatedAt = DateTime.UtcNow;
     }
+
+    public void Update(decimal additionalQuantity, decimal newEntryPrice)
+    {
+        var totalCost = (Quantity * EntryPrice) + (additionalQuantity * newEntryPrice);
+        Quantity += additionalQuantity;
+        EntryPrice = totalCost / Quantity;
+    }
 }

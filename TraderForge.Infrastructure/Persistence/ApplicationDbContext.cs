@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<Account>
     public DbSet<MarketAsset> MarketAssets { get; set; }
     public DbSet<Strategy> Strategies { get; set; }
     public DbSet<Position> Positions { get; set; }
+    public DbSet<Transaction> Transactions { get; set; }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     { // empty because inheriting the base constructor
     }
