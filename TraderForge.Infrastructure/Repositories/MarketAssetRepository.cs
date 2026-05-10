@@ -2,7 +2,7 @@ using TraderForge.Domain.Entities;
 using TraderForge.Domain.Repositories;
 using TraderForge.Infrastructure.Persistence;
 
-namespace TraderForge.Domain.Interfaces;
+namespace TraderForge.Infrastructure.Repositories;
 
 public class MarketAssetRepository : IMarketAssetRepository
 {

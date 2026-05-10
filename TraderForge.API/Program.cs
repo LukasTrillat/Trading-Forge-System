@@ -8,6 +8,7 @@ using TraderForge.API.Services;
 using TraderForge.Application.Handlers;
 using TraderForge.Application.Interfaces;
 using TraderForge.Domain.Interfaces;
+using TraderForge.Domain.Repositories;
 using TraderForge.Domain.Services;
 using TraderForge.Infrastructure;
 using TraderForge.Infrastructure.Persistence;

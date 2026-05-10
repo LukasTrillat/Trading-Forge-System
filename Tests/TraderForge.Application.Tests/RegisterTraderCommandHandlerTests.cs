@@ -4,21 +4,25 @@ using TraderForge.Application.DTOs;
 using TraderForge.Application.Handlers;
 using TraderForge.Domain.Entities;
 using TraderForge.Domain.Interfaces;
+using TraderForge.Domain.Repositories;
 namespace TraderForge.Application.Tests;
 
 public class RegisterTraderCommandHandlerTests
 {
     private readonly Mock<IIdentityService> _identityServiceMock;
     private readonly Mock<ITraderRepository> _traderRepositoryMock;
+    private readonly Mock<ISubscriptionPlanRepository> _planRepositoryMock;
     private readonly RegisterTraderCommandHandler _handler;
 
     public RegisterTraderCommandHandlerTests()
     {
         _identityServiceMock = new Mock<IIdentityService>();
         _traderRepositoryMock = new Mock<ITraderRepository>();
+        _planRepositoryMock = new Mock<ISubscriptionPlanRepository>();
         _handler = new RegisterTraderCommandHandler(
             _identityServiceMock.Object,
-            _traderRepositoryMock.Object);
+            _traderRepositoryMock.Object,
+            _planRepositoryMock.Object);
     }
 
     [Fact]
