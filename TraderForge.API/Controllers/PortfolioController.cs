@@ -48,7 +48,7 @@ public class PortfolioController : ControllerBase
         _resetSimulationHandler = resetSimulationHandler;
     }
 
-    [HttpGet]
+    [HttpGet("active")]
     public async Task<IActionResult> GetActivePortfolio()
     {
         var traderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -60,6 +60,16 @@ public class PortfolioController : ControllerBase
             return NotFound(new { error = result.ErrorMessage });
 
         return Ok(result.Value);
+    }
+
+    [HttpGet("simulation-history")]
+    public async Task<IActionResult> GetSimulationHistory()
+    {
+        var traderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(traderId))
+            return Unauthorized(new { error = "Invalid token claims." });
+
+        return Ok(new List<object>());
     }
 
     [HttpGet("strategies")]

@@ -4,7 +4,6 @@ import type { RegisterTraderCommand } from '../DTOs/Commands/RegisterTraderComma
 import type { LoginTraderQuery } from '../DTOs/Queries/LoginTraderQuery';
 import { IdentityService } from '../../Infrastructure/Services/IdentityService';
 
-// Instantiate the real service we set up earlier
 const identityService = new IdentityService();
 
 export function useAuth() {
@@ -15,20 +14,13 @@ export function useAuth() {
   async function register(command: RegisterTraderCommand): Promise<boolean> {
     setIsLoading(true);
     setError(null);
-    
-    // Call the real C# backend via IdentityService
     const result = await identityService.register(command);
-    
     setIsLoading(false);
-    if (result.isSuccess) {
-      return true;
-    } else {
-      setError(result.error || 'Registration failed');
-      return false;
-    }
+    if (!result.isSuccess) setError(result.error || 'Registration failed.');
+    return result.isSuccess;
   }
 
-async function login(query: LoginTraderQuery): Promise<boolean> {
+  async function login(query: LoginTraderQuery): Promise<boolean> {
     setIsLoading(true);
     setError(null);
     
@@ -36,16 +28,15 @@ async function login(query: LoginTraderQuery): Promise<boolean> {
     
     setIsLoading(false);
     
-    if (result.isSuccess && result.value?.token) {
-      setToken(result.value.token);
+    // Check if the token string exists in the result value
+    if (result.isSuccess && result.value) {
+      setToken(result.value); // result.value is the actual JWT string
       return true;
     } else {
-      // This will now show the actual error (e.g., "Password mismatch") or the login failure
       setError(result.error || 'Login failed.');
       return false;
     }
   }
-
 
   return { register, login, logout, isAuthenticated, trader, isLoading, error };
 }

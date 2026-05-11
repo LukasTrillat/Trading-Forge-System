@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using TraderForge.API.Mappers;
 using TraderForge.API.Requests;
 using TraderForge.Application.Handlers;
+using TraderForge.Application.DTOs.Queries;
 
 namespace TraderForge.API.Controllers;
 
@@ -16,16 +17,38 @@ public class PricesController : ControllerBase
         _handler = handler;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAllPrices()
+    {
+        var result = await _handler.HandleAsync(new GetMarketPricesQuery { Symbols = new List<string>() });
+        
+        if (!result.IsSuccess) return Ok(new List<object>());
+
+        var assets = result.Value.Select(kvp => new 
+        { 
+            symbol = kvp.Key, 
+            name = kvp.Key,
+            currentPrice = kvp.Value,
+            priceChange24h = 0,
+            priceChangePercent24h = 0 
+        }).ToList();
+
+        return Ok(assets);
+    }
+
     [HttpPost]
     public async Task<IActionResult> GetPrices([FromBody] GetMarketPricesRequest request) 
     {
-        if (request.Symbols == null || request.Symbols.Count == 0)
-        {
-            return BadRequest("You must provide at least one symbol.");
-        }
+        var result = await _handler.HandleAsync(request.ToQuery());
+        
+        if (!result.IsSuccess) return BadRequest(new { error = result.ErrorMessage });
 
-        var query = request.ToQuery();
-        var result = await _handler.HandleAsync(query); 
-        return Ok(result.Value); 
+        var assets = result.Value.Select(kvp => new 
+        { 
+            symbol = kvp.Key, 
+            currentPrice = kvp.Value 
+        }).ToList();
+
+        return Ok(assets); 
     }
 }

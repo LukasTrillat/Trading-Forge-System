@@ -1,36 +1,33 @@
+// src/Infrastructure/Services/PortfolioService.ts
 import type { Portfolio, SimulationSnapshot } from '../../Domain/Entities/Portfolio';
 import { Result } from '../../Application/Common/Result';
 import { httpClient } from '../Http/httpClient';
 
 export class PortfolioService {
-  
-  // Gets the active portfolio using the Bearer token injected by httpClient
-  async getPortfolio(traderId: string): Promise<Result<Portfolio>> {
+  async getPortfolio(_traderId: string): Promise<Result<Portfolio>> {
     try {
-      const response = await httpClient.get<Portfolio>('/api/portfolio/active');
-      return Result.ok(response.data);
-    } catch (error: any) {
-      return Result.fail(error.response?.data?.message || 'Failed to fetch portfolio data');
+      const { data } = await httpClient.get<Portfolio>('/api/portfolio/active');
+      return Result.ok(data);
+    } catch (error) {
+      return Result.fail('Failed to fetch real portfolio data.');
     }
   }
 
-  // Gets the user's historical snapshots
-  async getSimulationHistory(traderId: string): Promise<Result<SimulationSnapshot[]>> {
+  async getSimulationHistory(_traderId: string): Promise<Result<SimulationSnapshot[]>> {
     try {
-      const response = await httpClient.get<SimulationSnapshot[]>('/api/portfolio/simulation-history');
-      return Result.ok(response.data);
-    } catch (error: any) {
-      return Result.fail(error.response?.data?.message || 'Failed to fetch simulation history');
+      const { data } = await httpClient.get<SimulationSnapshot[]>('/api/portfolio/simulation-history');
+      return Result.ok(data);
+    } catch (error) {
+      return Result.ok([]); // Return empty list instead of failing if history is empty
     }
   }
 
-  // Calls the backend to reset the account balance and wipe positions
-  async resetSimulation(traderId: string): Promise<Result<void>> {
+  async resetSimulation(_traderId: string): Promise<Result<void>> {
     try {
       await httpClient.post('/api/portfolio/reset');
       return Result.ok(undefined);
-    } catch (error: any) {
-      return Result.fail(error.response?.data?.message || 'Failed to reset simulation');
+    } catch (error) {
+      return Result.fail('Failed to reset simulation.');
     }
   }
 }

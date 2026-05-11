@@ -1,81 +1,80 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TraderForge.Domain.Constants;
 using TraderForge.Domain.Entities;
-using TraderForge.Domain.Services;
+using TraderForge.Domain.Interfaces;
 using TraderForge.Domain.Repositories;
+using TraderForge.Domain.Services;
 
 namespace TraderForge.Infrastructure.Services;
 
 public class BackgroundMarketPollingService : BackgroundService
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IMarketDataProvider _dataProvider;
-    private readonly IMemoryCache _cache;
-    private readonly IMarketDataBroadcaster _broadcaster;
+    private readonly IServiceProvider _serviceProvider;
     
-    public BackgroundMarketPollingService(
-        IServiceScopeFactory scopeFactory, 
-        IMarketDataProvider dataProvider, 
-        IMemoryCache cache,
-        IMarketDataBroadcaster broadcaster)
+    // Define only the symbols you want to support
+    private readonly string[] _supportedSymbols = { "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "ADAUSDT", "DOTUSDT", "MATICUSDT" };
+
+    public BackgroundMarketPollingService(IServiceProvider serviceProvider)
     {
-        _scopeFactory = scopeFactory;
-        _dataProvider = dataProvider;
-        _cache = cache;
-        _broadcaster = broadcaster;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        Console.WriteLine("[BackgroundService] Market Polling Service Started.");
 
-        while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
-            await ExecutePollingCycle(stoppingToken);
-        }
-    }
-    
-    private async Task ExecutePollingCycle(CancellationToken stoppingToken)
-    {
-        try
-        {
-            var allPrices = await _dataProvider.GetPricesAsync();
-            SaveToCache(allPrices);
-            await SaveToDatabase(allPrices);
-            await _broadcaster.BroadCastPricesAsync(allPrices, stoppingToken);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Polling Error]: {ex.Message}");
-        }
-    }
-    
-    private void SaveToCache(Dictionary<string, decimal> allPrices)
-    {
-        _cache.Set(CacheKeys.MarketPrices, allPrices, TimeSpan.FromMinutes(1));
-    }
-
-    private async Task SaveToDatabase(Dictionary<string, decimal> allPrices)
-    {
-        using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IMarketAssetRepository>();
-
-        foreach (var symbol in SupportedAssets.Symbols)
-        {
-            if (allPrices.TryGetValue(symbol, out var price))
+            try
             {
-                var asset = new MarketAsset
-                {
-                    Symbol = symbol, 
-                    Name = symbol, 
-                    CurrentPrice = price, 
-                    LastUpdated = DateTime.UtcNow
-                };
+                using var scope = _serviceProvider.CreateScope();
+                var dataProvider = scope.ServiceProvider.GetRequiredService<IMarketDataProvider>();
+                var repository = scope.ServiceProvider.GetRequiredService<IMarketAssetRepository>();
 
-                await repository.AddAsync(asset);
+                var allPrices = await dataProvider.GetPricesAsync();
+                
+                if (allPrices != null && allPrices.Any())
+                {
+                    // FILTER: Only keep prices for our supported symbols
+                    var filteredPrices = allPrices
+                        .Where(p => _supportedSymbols.Contains(p.Key))
+                        .ToDictionary(p => p.Key, p => p.Value);
+
+                    var existingAssets = (await repository.GetAllAsync()).ToList();
+
+                    foreach (var price in filteredPrices)
+                    {
+                        var existingAsset = existingAssets.FirstOrDefault(a => a.Symbol == price.Key);
+
+                        if (existingAsset != null)
+                        {
+                            existingAsset.CurrentPrice = price.Value;
+                            existingAsset.LastUpdated = DateTime.UtcNow;
+                            await repository.UpdateAsync(existingAsset);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[BackgroundService] Seeding: {price.Key}");
+                            await repository.AddAsync(new MarketAsset
+                            {
+                                Symbol = price.Key,
+                                Name = price.Key.Replace("USDT", ""), // Clean name (e.g. BTC)
+                                CurrentPrice = price.Value,
+                                LastUpdated = DateTime.UtcNow
+                            });
+                        }
+                    }
+
+                    await repository.SaveChangesAsync();
+                    Console.WriteLine($"[BackgroundService] Successfully synced {filteredPrices.Count} assets.");
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[BackgroundService] ERROR: {ex.Message}");
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
 }

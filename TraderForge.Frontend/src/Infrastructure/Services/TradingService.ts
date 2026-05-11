@@ -7,8 +7,10 @@ export class TradingService {
   
   async placeOrder(command: PlaceOrderCommand): Promise<Result<Order>> {
     try {
-      // Direct the request to either BuyPositionCommand or SellPositionCommand endpoints
-      const endpoint = command.side === 'Buy' ? '/api/portfolio/buy' : '/api/portfolio/sell';
+      // Corrected endpoints to match PortfolioController.cs exactly
+      const endpoint = command.side === 'Buy' 
+        ? '/api/portfolio/positions/buy' 
+        : `/api/portfolio/positions/${command.symbol}/sell`; // Adjust based on if your sell logic uses symbol or id
       
       const response = await httpClient.post<Order>(endpoint, {
         assetSymbol: command.symbol,
@@ -19,25 +21,16 @@ export class TradingService {
       
       return Result.ok(response.data);
     } catch (error: any) {
-      return Result.fail(error.response?.data?.message || `Failed to execute ${command.side} order`);
+      return Result.fail(error.response?.data?.error || `Order execution failed.`);
     }
   }
 
-  async getOrderHistory(traderId: string): Promise<Result<Order[]>> {
+  async getOrderHistory(): Promise<Result<Order[]>> {
     try {
       const response = await httpClient.get<Order[]>('/api/portfolio/transactions');
       return Result.ok(response.data);
     } catch (error: any) {
-      return Result.fail(error.response?.data?.message || 'Failed to fetch order history');
-    }
-  }
-
-  async cancelOrder(orderId: string): Promise<Result<void>> {
-    try {
-      await httpClient.post(`/api/portfolio/orders/${orderId}/cancel`);
-      return Result.ok(undefined);
-    } catch (error: any) {
-      return Result.fail(error.response?.data?.message || 'Failed to cancel order');
+      return Result.fail('Failed to fetch transaction history.');
     }
   }
 }

@@ -1,95 +1,184 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePortfolio } from '../../../Application/Handlers/usePortfolio';
 import { useMarketData } from '../../../Application/Handlers/useMarketData';
 import { ExecutionPanel } from '../../Components/Orders/ExecutionPanel';
 import { CandlestickChart } from '../../Components/Charts/CandlestickChart';
 
+/**
+ * DashboardPage - Main view for market monitoring and trade execution.
+ */
 export const DashboardPage: React.FC = () => {
-  const { portfolio, fetchPortfolio, isLoading } = usePortfolio();
-  const { assets, fetchMarketData } = useMarketData();
-  const [activeAsset, setActiveAsset] = useState<string | null>(null);
+  // Real-time portfolio data (Balance, etc.)
+  const { portfolio, isLoading: portfolioLoading } = usePortfolio();
+  
+  // Market data (Assets list, Tabs, Selection logic)
+  const { 
+    assets, 
+    watchedAssets, 
+    unwatchedAssets, 
+    selectedAsset, 
+    handleSelectAsset, 
+    addToWatchlist 
+  } = useMarketData();
 
+  // Effect: If no asset is selected, automatically select the first one in your tabs
   useEffect(() => {
-    // Note: usePortfolio might not expose fetchPortfolio directly, 
-    // it triggers automatically via useEffect in the hook when traderId changes.
-    // If you get an error here about fetchPortfolio not being a function, just remove these two lines!
-    if (fetchPortfolio) fetchPortfolio();
-    if (fetchMarketData) fetchMarketData();
-  }, []);
-
-  useEffect(() => {
-    if (!activeAsset && portfolio?.positions && portfolio.positions.length > 0) {
-      setActiveAsset(portfolio.positions[0].symbol); // Fixed: was assetSymbol
+    if (!selectedAsset && watchedAssets.length > 0) {
+      handleSelectAsset(watchedAssets[0]);
     }
-  }, [portfolio, activeAsset]);
+  }, [watchedAssets, selectedAsset, handleSelectAsset]);
 
-  if (isLoading) return <div className="p-8 text-white">Loading portfolio data...</div>;
+  if (portfolioLoading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-900 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <p className="text-gray-400 font-medium">Syncing with secure vault...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white">
-      <div className="flex items-center gap-2 p-4 border-b border-gray-800 overflow-x-auto">
-        {portfolio?.positions?.map((pos) => (
-          <button
-            key={pos.symbol} // Fixed: was assetSymbol
-            onClick={() => setActiveAsset(pos.symbol)}
-            className={`px-4 py-2 rounded font-medium transition-colors ${
-              activeAsset === pos.symbol 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
-            {pos.symbol}
-          </button>
-        ))}
+    <div className="flex flex-col h-full bg-gray-900 text-white overflow-hidden font-sans">
+      
+      {/* --- TOP NAVIGATION: Tabs & Add Asset --- */}
+      <div className="flex items-center gap-2 p-4 border-b border-gray-800 bg-gray-850 overflow-x-auto min-h-[73px] shadow-sm">
+        <div className="flex items-center mr-4">
+          <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-r border-gray-700 pr-4 mr-2">
+            Terminal
+          </span>
+        </div>
+        
+        {/* Active Tabs (Watched Assets) */}
+        <div className="flex gap-2">
+          {watchedAssets.map((asset) => (
+            <button
+              key={asset.symbol}
+              onClick={() => handleSelectAsset(asset)}
+              className={`px-5 py-2 rounded-md font-bold text-sm transition-all border ${
+                selectedAsset?.symbol === asset.symbol 
+                  ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]' 
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-750 hover:text-white'
+              }`}
+            >
+              {asset.symbol}
+            </button>
+          ))}
+        </div>
 
-        <div className="ml-auto relative">
+        {/* Add Asset Dropdown */}
+        <div className="ml-4 relative">
           <select 
-            className="appearance-none bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded cursor-pointer outline-none font-medium"
-            onChange={(e) => setActiveAsset(e.target.value)}
+            className="appearance-none bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-md cursor-pointer outline-none font-black text-sm shadow-md transition-all pr-10 uppercase"
+            onChange={(e) => {
+              const symbol = e.target.value;
+              const asset = assets.find(a => a.symbol === symbol);
+              if (asset) {
+                addToWatchlist(symbol);
+                handleSelectAsset(asset);
+              }
+            }}
             value=""
           >
-            <option value="" disabled>+ Add to Dashboard</option>
-            {assets?.map(asset => (
-              <option key={asset.symbol} value={asset.symbol} className="bg-gray-800 text-white">
-                {asset.symbol} - ${asset.currentPrice}
-              </option>
-            ))}
+            <option value="" disabled>+ Add Market</option>
+            {unwatchedAssets.length > 0 ? (
+              unwatchedAssets.map(asset => (
+                <option key={asset.symbol} value={asset.symbol} className="bg-gray-800 text-white py-2">
+                  {asset.symbol} — ${asset.currentPrice?.toLocaleString() ?? '0.00'}
+                </option>
+              ))
+            ) : (
+              <option disabled className="text-gray-500 bg-gray-800">All assets added</option>
+            )}
           </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white text-xs">
+            ▼
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-4 gap-4">
-        <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col shadow-lg border border-gray-700">
-          <h2 className="text-xl font-bold mb-4">{activeAsset || 'Select an Asset'} Market</h2>
-          <div className="flex-1">
-            {activeAsset ? (
-              <CandlestickChart symbol={activeAsset} />
+      {/* --- MAIN DASHBOARD VIEWPORT --- */}
+      <div className="flex flex-1 overflow-hidden p-6 gap-6">
+        
+        {/* 1. LEFT COLUMN: Market Chart */}
+        <div className="flex-1 bg-gray-850 rounded-xl p-6 flex flex-col shadow-2xl border border-gray-800 relative">
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h2 className="text-3xl font-black text-white tracking-tight">
+                  {selectedAsset?.symbol || 'No Selection'}
+                </h2>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
+                  Live
+                </span>
+              </div>
+              <p className="text-emerald-400 font-mono text-2xl font-medium">
+                ${selectedAsset?.currentPrice?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? '0.00'}
+              </p>
+            </div>
+            
+            <div className="text-right">
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Market Volatility</span>
+              <div className="flex gap-1 justify-end">
+                <div className="w-1 h-3 bg-emerald-500 rounded-full"></div>
+                <div className="w-1 h-3 bg-emerald-500 rounded-full"></div>
+                <div className="w-1 h-3 bg-gray-700 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 min-h-0 bg-gray-900/50 rounded-lg border border-gray-800/50">
+            {selectedAsset?.symbol ? (
+              <CandlestickChart symbol={selectedAsset.symbol} />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                No asset selected
+              <div className="h-full flex items-center justify-center text-gray-600 italic border-2 border-dashed border-gray-800 rounded-lg m-4">
+                Pick a symbol from the top bar to initialize chart data
               </div>
             )}
           </div>
         </div>
 
-        <div className="w-80 flex flex-col gap-4">
-          <div className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 flex flex-col justify-center items-center">
-            <h3 className="text-gray-400 text-sm uppercase tracking-wider mb-2">Available Balance</h3>
-            <span className="text-3xl font-bold text-green-400">
-              ${portfolio?.virtualBalance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'} 
-            </span>
+        {/* 2. RIGHT COLUMN: Balance & Trading Panel */}
+        <div className="w-96 flex flex-col gap-6">
+          
+          {/* Virtual Balance Card */}
+          <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 rounded-xl p-8 shadow-2xl border border-blue-400/20 relative overflow-hidden group">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all"></div>
+            
+            <h3 className="text-blue-100/60 text-[10px] font-black uppercase tracking-[0.2em] mb-3">
+              Buying Power
+            </h3>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-blue-300 text-xl font-light">$</span>
+              <span className="text-4xl font-black text-white tabular-nums tracking-tight">
+                {portfolio?.virtualBalance?.toLocaleString(undefined, { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }) ?? '0.00'}
+              </span>
+            </div>
           </div>
 
-          <div className="bg-gray-800 rounded-lg flex-1 shadow-lg border border-gray-700 overflow-hidden">
-            {/* Fixed: Pass virtualBalance instead of availableBalance */}
-            <ExecutionPanel selectedSymbol={activeAsset} availableBalance={portfolio?.virtualBalance || 0} />
+          {/* Execution Panel */}
+          <div className="bg-gray-850 rounded-xl flex-1 shadow-2xl border border-gray-800 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-800 bg-gray-800/30 flex justify-between items-center">
+              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Execution Engine</h4>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto">
+              <ExecutionPanel 
+                selectedSymbol={selectedAsset?.symbol || null} 
+                availableBalance={portfolio?.virtualBalance || 0} 
+              />
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   );
 };
 
-// IMPORTANT: If your app uses default exports for pages (e.g. `import DashboardPage from './DashboardPage'`), 
-// uncomment the line below:
 export default DashboardPage;

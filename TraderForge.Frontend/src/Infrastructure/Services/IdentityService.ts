@@ -10,17 +10,18 @@ async login(query: LoginTraderQuery): Promise<Result<string>> {
     try {
       const { data } = await httpClient.post<any>('/api/identity/login', query);
       
-      // Check for both cases just in case
+      // Look for the token in both lowercase and PascalCase
       const token = data.token || data.Token;
-      
+
       if (token) {
         return Result.ok(token);
       }
-      return Result.fail('Backend success but no token key found.');
+      return Result.fail('The server returned success, but no token was found in the response.');
     } catch (error: unknown) {
       return Result.fail(extractErrorMessage(error, 'Invalid credentials.'));
     }
   }
+
 
 
   async register(command: RegisterTraderCommand): Promise<Result<void>> {

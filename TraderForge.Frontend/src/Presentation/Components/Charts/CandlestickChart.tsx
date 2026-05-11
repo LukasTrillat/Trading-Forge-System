@@ -1,55 +1,57 @@
-import { useEffect, useRef, memo } from 'react';
-import { createChart, ColorType, CrosshairMode, CandlestickSeries } from 'lightweight-charts';
-import type { UTCTimestamp } from 'lightweight-charts';
-import type { CandlestickBar } from '../../../Domain/Entities/Asset';
+import React, { useMemo } from 'react';
+import { useMarketData } from '../../../Application/Handlers/useMarketData';
 
 interface CandlestickChartProps {
-  candles: CandlestickBar[];
   symbol: string;
 }
 
-export const CandlestickChart = memo(function CandlestickChart({ candles, symbol }: CandlestickChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export const CandlestickChart: React.FC<CandlestickChartProps> = ({ symbol }) => {
+  const { candles, isLoading } = useMarketData();
 
-  useEffect(() => {
-    if (!containerRef.current || candles.length === 0) return;
+  const chartData = useMemo(() => {
+    // FIX: Added safety check to ensure candles exists and has data before processing
+    if (!candles || candles.length === 0) return null;
 
-    const chart = createChart(containerRef.current, {
-      autoSize: true,
-      layout: {
-        background: { type: ColorType.Solid, color: '#0a0a0b' },
-        textColor: '#9ca3af',
-      },
-      grid: {
-        vertLines: { color: '#1a1a1f' },
-        horzLines: { color: '#1a1a1f' },
-      },
-      crosshair: { mode: CrosshairMode.Normal },
-      rightPriceScale: { borderColor: '#2e303a' },
-      timeScale: { borderColor: '#2e303a', timeVisible: true, secondsVisible: false },
-    });
+    const maxPrice = Math.max(...candles.map((c) => c.high));
+    const minPrice = Math.min(...candles.map((c) => c.low));
+    const range = maxPrice - minPrice;
 
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: '#10b981',
-      downColor: '#ef4444',
-      borderVisible: false,
-      wickUpColor: '#10b981',
-      wickDownColor: '#ef4444',
-    });
+    return { candles, maxPrice, minPrice, range };
+  }, [candles]);
 
-    series.setData(candles.map((c) => ({ ...c, time: c.time as UTCTimestamp })));
-    chart.timeScale().fitContent();
-
-    return () => chart.remove();
-  }, [candles, symbol]);
-
-  if (candles.length === 0) {
+  if (isLoading || !chartData) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-neutral-600 text-sm">
-        Select an asset to view the chart
+      <div className="h-full w-full flex items-center justify-center bg-gray-900 text-gray-500 rounded-lg border border-gray-800">
+        <div className="flex flex-col items-center gap-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span>Loading chart data for {symbol}...</span>
+        </div>
       </div>
     );
   }
 
-  return <div ref={containerRef} className="w-full h-full" />;
-});
+  return (
+    <div className="h-full w-full bg-gray-900 p-4 rounded-lg border border-gray-800">
+      <div className="relative h-full flex items-end gap-1">
+        {chartData.candles.map((candle, i) => {
+          const isUp = candle.close >= candle.open;
+          const height = ((Math.abs(candle.close - candle.open) / chartData.range) * 100) + 2;
+          const bottom = ((Math.min(candle.close, candle.open) - chartData.minPrice) / chartData.range) * 100;
+          
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center group relative h-full">
+              <div 
+                className={`w-full rounded-sm transition-all ${isUp ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400'}`}
+                style={{ height: `${height}%`, marginBottom: `${bottom}%` }}
+              />
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-xs p-2 rounded shadow-xl z-10 border border-gray-700 whitespace-nowrap">
+                Price: ${candle.close}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};

@@ -13,13 +13,14 @@ public class GetMarketPricesQueryHandler
     public async Task<ResultGeneric<Dictionary<string, decimal>>> HandleAsync(GetMarketPricesQuery query)
     {
         var symbols = query.Symbols;
-        
         var allPrices = await _marketService.GetPricesAsync();
-        if (allPrices.Count == 0) return ResultGeneric<Dictionary<string, decimal>>.Failure("No prices found.");
+
+        if (allPrices == null) 
+            return ResultGeneric<Dictionary<string, decimal>>.Failure("No prices found.");
         
-        var requestedPrices = allPrices
-            .Where(priceSymbol => symbols.Contains(priceSymbol.Key))
-            .ToDictionary(priceValue => priceValue.Key, p => p.Value);
+        var requestedPrices = (symbols == null || symbols.Count == 0)
+            ? allPrices
+            : allPrices.Where(p => symbols.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value);
 
         return ResultGeneric<Dictionary<string, decimal>>.Success(requestedPrices);
     }
