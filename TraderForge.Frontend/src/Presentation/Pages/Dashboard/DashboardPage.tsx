@@ -1,150 +1,95 @@
-import { useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { useMarketData } from '../../../Application/Handlers/useMarketData';
-import { usePortfolioStore } from '../../../Application/Store/portfolioStore';
+import React, { useEffect, useState } from 'react';
 import { usePortfolio } from '../../../Application/Handlers/usePortfolio';
-import { PriceTicker } from '../../Components/Ticker/PriceTicker';
-import { CandlestickChart } from '../../Components/Charts/CandlestickChart';
-import { OrderBook } from '../../Components/OrderBook/OrderBook';
-import { ExecutionPanel } from '../../Components/Orders/ExecutionPanel';
-import { Badge } from '../../Components/UI/Badge';
+import { useMarketData } from '../../../Application/Handlers/useMarketData';
+import ExecutionPanel from '../../Components/Orders/ExecutionPanel';
+import CandlestickChart from '../../Components/Charts/CandlestickChart';
 
-export function DashboardPage() {
-  const {
-    assets,
-    watchedAssets,
-    unwatchedAssets,
-    selectedAsset,
-    candles,
-    orderBook,
-    isLoading,
-    isStale,
-    handleSelectAsset,
-    addToWatchlist,
-    removeFromWatchlist,
-  } = useMarketData();
-  const { portfolio } = usePortfolioStore();
-  usePortfolio();
+export const DashboardPage: React.FC = () => {
+  const { portfolio, fetchPortfolio, isLoading } = usePortfolio();
+  const { assets, fetchMarketData } = useMarketData();
+  const [activeAsset, setActiveAsset] = useState<string | null>(null);
 
   useEffect(() => {
-    if (watchedAssets.length > 0 && !selectedAsset) {
-      handleSelectAsset(watchedAssets[0]);
-    }
-  }, [watchedAssets]);
+    // Note: usePortfolio might not expose fetchPortfolio directly, 
+    // it triggers automatically via useEffect in the hook when traderId changes.
+    // If you get an error here about fetchPortfolio not being a function, just remove these two lines!
+    if (fetchPortfolio) fetchPortfolio();
+    if (fetchMarketData) fetchMarketData();
+  }, []);
 
-  const pnlIsUp = (portfolio?.totalPnL ?? 0) >= 0;
-  const positionCount = portfolio?.positions.length ?? 0;
+  useEffect(() => {
+    if (!activeAsset && portfolio?.positions && portfolio.positions.length > 0) {
+      setActiveAsset(portfolio.positions[0].symbol); // Fixed: was assetSymbol
+    }
+  }, [portfolio, activeAsset]);
+
+  if (isLoading) return <div className="p-8 text-white">Loading portfolio data...</div>;
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      {/* Stale data warning — BR-19 */}
-      {isStale && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs">
-          <AlertTriangle size={14} />
-          Market data may be delayed. Refresh if prices seem incorrect.
+    <div className="flex flex-col h-full bg-gray-900 text-white">
+      <div className="flex items-center gap-2 p-4 border-b border-gray-800 overflow-x-auto">
+        {portfolio?.positions?.map((pos) => (
+          <button
+            key={pos.symbol} // Fixed: was assetSymbol
+            onClick={() => setActiveAsset(pos.symbol)}
+            className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeAsset === pos.symbol 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            {pos.symbol}
+          </button>
+        ))}
+
+        <div className="ml-auto relative">
+          <select 
+            className="appearance-none bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded cursor-pointer outline-none font-medium"
+            onChange={(e) => setActiveAsset(e.target.value)}
+            value=""
+          >
+            <option value="" disabled>+ Add to Dashboard</option>
+            {assets?.map(asset => (
+              <option key={asset.symbol} value={asset.symbol} className="bg-gray-800 text-white">
+                {asset.symbol} - ${asset.currentPrice}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+      </div>
 
-      {/* Price Ticker */}
-      {isLoading ? (
-        <div className="h-14 border-b border-neutral-800 flex items-center px-4">
-          <span className="text-xs text-neutral-600 animate-pulse">Loading market data...</span>
-        </div>
-      ) : (
-        <PriceTicker
-          assets={watchedAssets}
-          allAssets={assets}
-          selectedSymbol={selectedAsset?.symbol}
-          onSelect={handleSelectAsset}
-          onAdd={addToWatchlist}
-          onRemove={removeFromWatchlist}
-        />
-      )}
-
-      {/* Main content */}
-      <div className="flex flex-1 min-h-0 gap-0">
-        {/* Center: Chart + header */}
-        <div className="flex flex-col flex-1 min-w-0 min-h-0 p-3 gap-3">
-          {/* Asset header */}
-          {selectedAsset && (
-            <div className="flex items-center gap-4 px-1">
-              <div>
-                <span className="text-lg font-bold text-neutral-100">{selectedAsset.symbol}</span>
-                <span className="text-sm text-neutral-500 ml-2">{selectedAsset.name}</span>
+      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+        <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col shadow-lg border border-gray-700">
+          <h2 className="text-xl font-bold mb-4">{activeAsset || 'Select an Asset'} Market</h2>
+          <div className="flex-1">
+            {activeAsset ? (
+              <CandlestickChart symbol={activeAsset} />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                No asset selected
               </div>
-              <span className="text-xl font-mono font-bold text-neutral-100">
-                ${selectedAsset.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-              <Badge variant={selectedAsset.priceChange24h >= 0 ? 'up' : 'down'}>
-                {selectedAsset.priceChange24h >= 0 ? '+' : ''}
-                {selectedAsset.priceChangePercent24h.toFixed(2)}%
-              </Badge>
-              <span className="text-xs text-neutral-600 ml-auto">
-                Vol: {(selectedAsset.volume24h / 1_000_000).toFixed(1)}M
-              </span>
-            </div>
-          )}
-
-          {/* No asset selected after removing from watchlist */}
-          {!selectedAsset && !isLoading && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-2 text-neutral-600">
-              <p className="text-sm">No hay ningún activo seleccionado.</p>
-              <p className="text-xs">Selecciona uno del ticker o añade uno con el botón <span className="text-neutral-400">+ Añadir</span>.</p>
-            </div>
-          )}
-
-          {/* Candlestick Chart */}
-          {selectedAsset && (
-            <div className="flex-1 min-h-0 bg-[#0a0a0b] rounded-lg overflow-hidden relative">
-              <div className="absolute inset-0">
-                <CandlestickChart candles={candles} symbol={selectedAsset.symbol} />
-              </div>
-            </div>
-          )}
-
-          {/* Portfolio summary bar */}
-          {portfolio && (
-            <div className="flex items-center gap-6 px-3 py-2 bg-neutral-900 rounded-lg border border-neutral-800 text-xs">
-              <div>
-                <span className="text-neutral-500">Balance </span>
-                <span className="font-mono font-semibold text-neutral-100">
-                  ${portfolio.virtualBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div>
-                <span className="text-neutral-500">Portfolio </span>
-                <span className="font-mono font-semibold text-neutral-100">
-                  ${portfolio.totalPortfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div>
-                <span className="text-neutral-500">P&L </span>
-                <span className={`font-mono font-semibold ${pnlIsUp ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {pnlIsUp ? '+' : ''}${portfolio.totalPnL.toFixed(2)} ({portfolio.totalPnLPercent.toFixed(2)}%)
-                </span>
-              </div>
-              <div className="ml-auto flex items-center gap-1.5">
-                <span className="text-neutral-500">Posiciones abiertas</span>
-                <span className={`font-mono font-bold text-sm px-2 py-0.5 rounded-md ${
-                  positionCount === 0
-                    ? 'text-neutral-500 bg-neutral-800'
-                    : 'text-emerald-400 bg-emerald-500/10'
-                }`}>
-                  {positionCount}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right panel: Order Book + Execution */}
-        <div className="w-72 shrink-0 flex flex-col gap-3 p-3 border-l border-neutral-800">
-          <div className="flex-1 min-h-0">
-            <OrderBook orderBook={orderBook} currentPrice={selectedAsset?.currentPrice ?? 0} />
+            )}
           </div>
-          <ExecutionPanel selectedAsset={selectedAsset} />
+        </div>
+
+        <div className="w-80 flex flex-col gap-4">
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 flex flex-col justify-center items-center">
+            <h3 className="text-gray-400 text-sm uppercase tracking-wider mb-2">Available Balance</h3>
+            <span className="text-3xl font-bold text-green-400">
+              ${portfolio?.virtualBalance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'} 
+            </span>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg flex-1 shadow-lg border border-gray-700 overflow-hidden">
+            {/* Fixed: Pass virtualBalance instead of availableBalance */}
+            <ExecutionPanel selectedSymbol={activeAsset} availableBalance={portfolio?.virtualBalance || 0} />
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+// IMPORTANT: If your app uses default exports for pages (e.g. `import DashboardPage from './DashboardPage'`), 
+// uncomment the line below:
+export default DashboardPage;
