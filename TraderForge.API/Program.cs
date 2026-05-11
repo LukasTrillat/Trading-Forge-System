@@ -110,8 +110,14 @@ builder.Services.AddTransient<ResetSimulationCommandHandler>();
 builder.Services.AddTransient<GetOrdersQueryHandler>();
 builder.Services.AddHostedService<TrialExpirationService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
-builder.Services.AddControllers().AddJsonOptions(options =>
-    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
+
+
 
 // -- CQRS Handlers -- //
 builder.Services.AddTransient<GetMarketPricesQueryHandler>();
@@ -122,17 +128,18 @@ builder.Services.AddSingleton<IMarketService, CachedMarketService>();
 builder.Services.AddHostedService<BackgroundMarketPollingService>();
 builder.Services.AddSingleton<IMarketDataBroadcaster, SignalRMarketDataBroadcaster>();
 
-// -- CORS -- //
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000")
+        policyBuilder.WithOrigins("http://localhost:3000", "http://localhost:5173")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
     });
 });
+
+
 
 // -- Initialize app -- //
 var app = builder.Build();

@@ -5,10 +5,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 
 namespace TraderForge.Infrastructure.Services;
 
@@ -28,104 +27,75 @@ public class IdentityService : IIdentityService
         var newApplicationUser = new Account()
         {
             Id = newUserId,
-            UserName = email,
+            UserName = email, // ASP.NET Identity uses UserName for login
             Email = email
         };
 
+        // This method handles the password hashing automatically
         var result = await _userManager.CreateAsync(newApplicationUser, password);
-        EnsureSuccessOrThrow(result);
-        await _userManager.AddClaimAsync(newApplicationUser, new Claim(ClaimTypes.Role, "Trader"));
-    }
-
-    private void EnsureSuccessOrThrow(IdentityResult result)
-    {
+        
         if (!result.Succeeded)
         {
-            var errorMessage = result.Errors.FirstOrDefault()?.Description ?? "Unknown registration error";
-            throw new Exception($"User registration failed: {errorMessage}");
+            var error = result.Errors.FirstOrDefault()?.Description ?? "Registration failed";
+            throw new Exception(error);
         }
+
+        // Assign the default role
+        await _userManager.AddClaimAsync(newApplicationUser, new Claim(ClaimTypes.Role, "Trader"));
     }
 
     public async Task<string> GetValidatedTokenAsync(string email, string password)
     {
-        Account user = await GetApplicationUserByEmailAsync(email, password);
-        if (await IsUserValidatedAsync(user,password))
+        // 1. Find user by email (or username since they are same)
+        var user = await _userManager.FindByEmailAsync(email) 
+                   ?? await _userManager.FindByNameAsync(email);
+
+        if (user == null)
+        {
+            throw new Exception("Invalid Credentials: User does not exist.");
+        }
+
+        // 2. Verify the hashed password
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
+        
+        if (isPasswordValid)
         {
             return await GenerateJwtTokenForUserAsync(user);
         }
-        else
-        {
-            throw new Exception("Invalid Credentials, user not validated");
-        }
 
+        throw new Exception("Invalid Credentials: Password is incorrect.");
     }
 
-    private async Task<Account> GetApplicationUserByEmailAsync(string email, string password)
-    {
-        try
-        {
-            return await _userManager.FindByEmailAsync(email);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to find User by it's email: {ex.Message}");
-        }
-    }
-    
-    private async Task<bool> IsUserValidatedAsync(Account user, string password)
-    {
-        return await _userManager.CheckPasswordAsync(user, password);
-    }
-
+    // ... Keep your existing GenerateJwtTokenForUserAsync and helper methods below ...
     private async Task<string> GenerateJwtTokenForUserAsync(Account user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(await GenerateSecurityTokenDescriptorAsync(user));
-
+        var tokenDescriptor = await GenerateSecurityTokenDescriptorAsync(user);
+        var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
 
     private async Task<SecurityTokenDescriptor> GenerateSecurityTokenDescriptorAsync(Account user)
     {
-        string issuer = _jwtConfiguration["JwtSettings:Issuer"] ?? throw new Exception("JWT Issuer is missing!");
-        string audience = _jwtConfiguration["JwtSettings:Audience"] ?? throw new Exception("JWT Audience is missing!");
-
-        List<Claim> claims = await GetUserClaimsAsync(user);    
+        string secret = _jwtConfiguration["JwtSettings:Secret"] ?? "YourDefaultSecretForDevelopmentOnly!!";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         
-        return new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims), 
-            Expires = DateTime.UtcNow.AddHours(2), 
-            Issuer = issuer,                      
-            Audience = audience,                 
-            SigningCredentials = RetrieveSigningCredentials()
-        };
-    }
-
-    private async Task<List<Claim>> GetUserClaimsAsync(Account user)
-    {
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!)
         };
+        
         var userClaims = await _userManager.GetClaimsAsync(user);
         claims.AddRange(userClaims);
 
-        return claims;
-
+        return new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(2),
+            Issuer = _jwtConfiguration["JwtSettings:Issuer"],
+            Audience = _jwtConfiguration["JwtSettings:Audience"],
+            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+        };
     }
-
-    private SigningCredentials RetrieveSigningCredentials()
-    {
-        string secret = _jwtConfiguration["JwtSettings:Secret"] ?? throw new Exception("JWT Secret is missing!");
-        byte[] keyBytes = Encoding.UTF8.GetBytes(secret);
-        var securityKey = new SymmetricSecurityKey(keyBytes);
-        return new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-        
-    }
-
-    
-
-
 }
