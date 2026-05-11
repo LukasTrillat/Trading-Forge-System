@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useMarketStore } from '../Store/marketStore';
 import { usePortfolioStore } from '../Store/portfolioStore';
 import { MarketService } from '../../Infrastructure/Services/MarketService';
@@ -8,13 +8,14 @@ import { MARKET_DATA_MAX_STALENESS_MS } from '../Common/constants';
 
 const marketService = new MarketService();
 
-/** Manages market data fetching and simulates real-time price updates (BR-19). */
 export function useMarketData() {
   const {
     assets, watchlist, selectedAsset, candles, orderBook, isLoading, lastUpdatedAt,
-    setAssets, selectAsset, setCandles, setOrderBook, updateAssetPrice, setLoading,
+    setAssets, selectAsset, setCandles, setOrderBook, setLoading,
     addToWatchlist, removeFromWatchlist,
   } = useMarketStore();
+
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isStale = lastUpdatedAt
     ? Date.now() - lastUpdatedAt > MARKET_DATA_MAX_STALENESS_MS
@@ -31,18 +32,24 @@ export function useMarketData() {
     });
   }, []);
 
-  /** Simulate live price updates every 2 seconds and propagate to portfolio for live P&L. */
   useEffect(() => {
     if (assets.length === 0) return;
-    const id = setInterval(() => {
-      const asset = assets[Math.floor(Math.random() * assets.length)];
-      const delta = asset.currentPrice * (Math.random() - 0.499) * 0.003;
-      const newPrice = parseFloat((asset.currentPrice + delta).toFixed(2));
-      updateAssetPrice(asset.symbol, newPrice, delta);
-      usePortfolioStore.getState().updatePositionPrice(asset.symbol, newPrice);
-    }, 2000);
-    return () => clearInterval(id);
-  }, [assets]);
+
+    intervalRef.current = setInterval(async () => {
+      await marketService.refreshPrices();
+      const updated = marketService.getCachedAssets();
+      if (updated.length > 0) {
+        setAssets(updated);
+        updated.forEach((asset) => {
+          usePortfolioStore.getState().updatePositionPrice(asset.symbol, asset.currentPrice);
+        });
+      }
+    }, 5000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [assets.length > 0]);
 
   const loadCandles = useCallback(async (symbol: string, interval: CandleInterval = '1h') => {
     const result = await marketService.getCandles(symbol, interval);

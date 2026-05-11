@@ -1,26 +1,32 @@
 import { useEffect } from 'react';
 import { usePortfolioStore } from '../Store/portfolioStore';
 import { PortfolioService } from '../../Infrastructure/Services/PortfolioService';
+import { TradingService } from '../../Infrastructure/Services/TradingService';
 import { SubscriptionService } from '../../Infrastructure/Services/SubscriptionService';
 import { useNotificationStore } from '../Store/notificationStore';
 
 const portfolioService = new PortfolioService();
 const subscriptionService = new SubscriptionService();
+const tradingService = new TradingService();
 
 export function usePortfolio() {
-  const { portfolio, orderHistory, simulationHistory, isLoading, setPortfolio, setSimulationHistory, setLoading } = usePortfolioStore();
+  const { portfolio, orderHistory, simulationHistory, isLoading, setPortfolio, setOrderHistory, setSimulationHistory, setLoading } = usePortfolioStore();
   const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [planResult, historyResult] = await Promise.all([
+
+      const [planResult, historyResult, ordersResult] = await Promise.all([
         subscriptionService.getMyPlan(),
         portfolioService.getSimulationHistory(),
+        tradingService.getOrderHistory(),
       ]);
+
       const initialBalance = planResult.isSuccess
         ? planResult.value!.initialVirtualBalance
         : 10_000;
+
       const portfolioResult = await portfolioService.getPortfolio(initialBalance);
       if (portfolioResult.isSuccess) {
         setPortfolio(portfolioResult.value!);
@@ -31,6 +37,7 @@ export function usePortfolio() {
         addNotification('error', portfolioResult.errorMessage ?? 'Could not load portfolio.');
       }
       if (historyResult.isSuccess) setSimulationHistory(historyResult.value!);
+      if (ordersResult.isSuccess) setOrderHistory(ordersResult.value!);
       setLoading(false);
     }
     load();

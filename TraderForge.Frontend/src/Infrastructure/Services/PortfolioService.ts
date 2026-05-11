@@ -1,4 +1,4 @@
-import type { Portfolio, SimulationSnapshot, Position } from '../../Domain/Entities/Portfolio';
+import type { Portfolio, Position } from '../../Domain/Entities/Portfolio';
 import { Result } from '../../Application/Common/Result';
 import { httpClient } from '../Http/httpClient';
 
@@ -8,7 +8,7 @@ interface BackendPortfolio {
   isActive: boolean;
 }
 
-interface BackendAsset {
+interface BackendPosition {
   id: string;
   symbol: string;
   quantity: number;
@@ -17,34 +17,45 @@ interface BackendAsset {
 
 // Map backend symbols (including USDT pairs) to friendly display names.
 const ASSET_NAMES: Record<string, string> = {
+<<<<<<< HEAD
   AAPL: 'Apple Inc.', TSLA: 'Tesla Inc.', MSFT: 'Microsoft Corp.',
   GOOGL: 'Alphabet Inc.', AMZN: 'Amazon.com Inc.', NVDA: 'NVIDIA Corp.',
   META: 'Meta Platforms Inc.', BTCUSDT: 'Bitcoin', ETHUSDT: 'Ethereum', BNBUSDT: 'Binance Coin',
   ADAUSDT: 'Cardano', MATICUSDT: 'Polygon', SOLUSDT: 'Solana', DOTUSDT: 'Polkadot',
+=======
+  BTCUSDT: 'Bitcoin',
+  ETHUSDT: 'Ethereum',
+  SOLUSDT: 'Solana',
+  BNBUSDT: 'BNB',
+  XRPUSDT: 'XRP',
+>>>>>>> eace40a (feat: connect backend)
 };
 
 export class PortfolioService {
   async getPortfolio(initialBalance = 10_000): Promise<Result<Portfolio>> {
     try {
-      const [portfolioRes, assetsRes] = await Promise.all([
+      const [portfolioRes, positionsRes] = await Promise.all([
         httpClient.get<BackendPortfolio>('/api/portfolio'),
-        httpClient.get<BackendAsset[]>('/api/portfolio/assets'),
+        httpClient.get<BackendPosition[]>('/api/portfolio/positions'),
       ]);
 
       const { id, virtualBalance } = portfolioRes.data;
-      const backendAssets = assetsRes.data;
+      const backendPositions = positionsRes.data;
 
-      const positions: Position[] = backendAssets.map((a) => ({
-        id: a.id,
-        symbol: a.symbol,
-        assetName: ASSET_NAMES[a.symbol] ?? a.symbol,
-        quantity: a.quantity,
-        averageBuyPrice: a.entryPrice,
-        currentPrice: a.entryPrice,
-        unrealizedPnL: 0,
-        unrealizedPnLPercent: 0,
-        totalValue: +(a.quantity * a.entryPrice).toFixed(2),
-      }));
+      const positions: Position[] = backendPositions.map((p) => {
+        const totalValue = +(p.quantity * p.entryPrice).toFixed(2);
+        return {
+          id: p.id,
+          symbol: p.symbol,
+          assetName: ASSET_NAMES[p.symbol] ?? p.symbol,
+          quantity: p.quantity,
+          averageBuyPrice: p.entryPrice,
+          currentPrice: p.entryPrice,
+          unrealizedPnL: 0,
+          unrealizedPnLPercent: 0,
+          totalValue,
+        };
+      });
 
       const positionValue = positions.reduce((sum, p) => sum + p.totalValue, 0);
       const totalPortfolioValue = +(virtualBalance + positionValue).toFixed(2);
@@ -64,25 +75,25 @@ export class PortfolioService {
     }
   }
 
-  async addAsset(symbol: string, quantity: number, entryPrice: number): Promise<Result<void>> {
+  async buyPosition(symbol: string, quantity: number, entryPrice: number): Promise<Result<void>> {
     try {
-      await httpClient.post('/api/portfolio/assets', { symbol, quantity, entryPrice });
+      await httpClient.post('/api/portfolio/positions/buy', { symbol, quantity, entryPrice });
       return Result.ok(undefined);
     } catch (error) {
-      return Result.fail(extractErrorMessage(error, 'Failed to add asset.'));
+      return Result.fail(extractErrorMessage(error, 'Failed to buy position.'));
     }
   }
 
-  async removeAsset(assetId: string): Promise<Result<void>> {
+  async sellPosition(positionId: string, quantity: number): Promise<Result<void>> {
     try {
-      await httpClient.delete(`/api/portfolio/assets/${assetId}`);
+      await httpClient.post(`/api/portfolio/positions/${positionId}/sell`, { quantity });
       return Result.ok(undefined);
     } catch (error) {
-      return Result.fail(extractErrorMessage(error, 'Failed to remove asset.'));
+      return Result.fail(extractErrorMessage(error, 'Failed to sell position.'));
     }
   }
 
-  async getSimulationHistory(): Promise<Result<SimulationSnapshot[]>> {
+  async getSimulationHistory(): Promise<Result<[]>> {
     return Result.ok([]);
   }
 }
