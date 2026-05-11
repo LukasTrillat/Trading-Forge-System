@@ -12,14 +12,26 @@ export function AdminPage() {
   const [messages, setMessages] = useState<SupportMessage[]>([]);
 
   useEffect(() => {
-    // We instantiate the services to get our data (decoupled from the component)
-    const planService = new AdminPlanService();
-    const mockPlans = planService.getAllPlans();
-    setPlans(mockPlans);
+    async function loadData() {
+      const planService = new AdminPlanService();
+      const supportService = new AdminSupportService();
+      
+      try {
+        const fetchedPlans = await planService.getAllPlans();
+        setPlans(fetchedPlans);
+      } catch (error) {
+        console.error("Failed to load plans:", error);
+      }
 
-    const supportService = new AdminSupportService();
-    const mockMessages = supportService.getAllMessages();
-    setMessages(mockMessages);
+      try {
+        const fetchedMessages = await supportService.getAllMessages();
+        setMessages(fetchedMessages);
+      } catch (error) {
+        console.error("Failed to load support messages:", error);
+      }
+    }
+    
+    loadData();
   }, []);
 
   return (
