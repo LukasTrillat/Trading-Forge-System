@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import { PortfolioService } from '../../Infrastructure/Services/PortfolioService';
-import { SubscriptionService } from '../../Infrastructure/Services/SubscriptionService';
 import { usePortfolioStore } from '../Store/portfolioStore';
 import { useNotificationStore } from '../Store/notificationStore';
 import type { PlaceOrderCommand } from '../DTOs/Commands/PlaceOrderCommand';
 import { COMMISSION_RATE } from '../Common/constants';
 
 const portfolioService = new PortfolioService();
-const subscriptionService = new SubscriptionService();
 
 export function usePlaceOrder() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { portfolio, setPortfolio } = usePortfolioStore();
+  const { portfolio, setPortfolio, initialBalance } = usePortfolioStore();
   const { addNotification } = useNotificationStore();
 
   function validate(command: PlaceOrderCommand, currentPrice: number): string | null {
     if (!portfolio) return 'Portfolio not loaded.';
     if (command.quantity <= 0) return 'La cantidad debe ser mayor a 0.';
+    if (command.side === 'Buy' && currentPrice <= 0) return 'Precio del activo no disponible. Espera a que se carguen los precios.';
     if (command.side === 'Buy') {
       const estimatedTotal = currentPrice * command.quantity * (1 + COMMISSION_RATE);
       if (estimatedTotal > portfolio.virtualBalance) {
@@ -31,8 +30,6 @@ export function usePlaceOrder() {
   }
 
   async function refreshPortfolio() {
-    const planResult = await subscriptionService.getMyPlan();
-    const initialBalance = planResult.isSuccess ? planResult.value!.initialVirtualBalance : 10_000;
     const refreshed = await portfolioService.getPortfolio(initialBalance);
     if (refreshed.isSuccess) setPortfolio(refreshed.value!);
   }

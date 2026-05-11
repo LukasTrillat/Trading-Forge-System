@@ -27,6 +27,14 @@ const INTERVAL_VOLATILITY: Record<CandleInterval, number> = {
 
 const SUPPORTED_SYMBOLS = Object.keys(ASSET_NAMES);
 
+const FALLBACK_PRICES: Record<string, number> = {
+  BTCUSDT: 63200,
+  ETHUSDT: 4200,
+  SOLUSDT: 28.5,
+  BNBUSDT: 620,
+  XRPUSDT: 0.52,
+};
+
 function generateCandles(basePrice: number, interval: CandleInterval = '1h'): CandlestickBar[] {
   const bars: CandlestickBar[] = [];
   const count = INTERVAL_COUNT[interval];
@@ -77,15 +85,18 @@ export class MarketService {
         symbols: SUPPORTED_SYMBOLS,
       });
 
-      const assets: Asset[] = SUPPORTED_SYMBOLS.map((symbol) => ({
-        symbol,
-        name: ASSET_NAMES[symbol] ?? symbol,
-        currentPrice: data[symbol] ?? 0,
-        priceChange24h: 0,
-        priceChangePercent24h: 0,
-        volume24h: 0,
-        marketCap: 0,
-      }));
+      const assets: Asset[] = SUPPORTED_SYMBOLS.map((symbol) => {
+        const price = data[symbol] ?? FALLBACK_PRICES[symbol] ?? 0;
+        return {
+          symbol,
+          name: ASSET_NAMES[symbol] ?? symbol,
+          currentPrice: price,
+          priceChange24h: 0,
+          priceChangePercent24h: 0,
+          volume24h: 0,
+          marketCap: 0,
+        };
+      });
 
       cachedAssets = assets;
       return Result.ok(assets);
@@ -101,7 +112,7 @@ export class MarketService {
         symbols: [symbol],
       });
 
-      const price = data[symbol];
+      const price = data[symbol] ?? FALLBACK_PRICES[symbol];
       if (price == null) return Result.fail(`Asset ${symbol} not found.`);
 
       return Result.ok({
@@ -167,10 +178,13 @@ export class MarketService {
       });
 
       if (cachedAssets) {
-        cachedAssets = cachedAssets.map((asset) => ({
-          ...asset,
-          currentPrice: data[asset.symbol] ?? asset.currentPrice,
-        }));
+        const hasRealPrices = SUPPORTED_SYMBOLS.some((s) => data[s] != null && data[s] > 0);
+        if (hasRealPrices) {
+          cachedAssets = cachedAssets.map((asset) => ({
+            ...asset,
+            currentPrice: data[asset.symbol] ?? asset.currentPrice,
+          }));
+        }
       }
     } catch {
       // silent fail — keep stale prices

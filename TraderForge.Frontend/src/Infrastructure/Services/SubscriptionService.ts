@@ -11,11 +11,15 @@ export interface PlanInfo {
   canModifyVirtualBalance: boolean;
 }
 
+interface TraderPlanResponse {
+  plan: PlanInfo;
+}
+
 export class SubscriptionService {
   async getMyPlan(): Promise<Result<PlanInfo>> {
     try {
-      const { data } = await httpClient.get<PlanInfo>('/api/subscription/trader-plan');
-      return Result.ok(data);
+      const { data } = await httpClient.get<TraderPlanResponse>('/api/subscription/trader-plan');
+      return Result.ok(data.plan);
     } catch (error) {
       const e = error as { response?: { data?: { error?: string } }; code?: string };
       if (e?.code === 'ERR_NETWORK' || !e?.response) return Result.fail('Cannot reach the server.');

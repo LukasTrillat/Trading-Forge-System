@@ -10,7 +10,7 @@ const subscriptionService = new SubscriptionService();
 const tradingService = new TradingService();
 
 export function usePortfolio() {
-  const { portfolio, orderHistory, simulationHistory, isLoading, setPortfolio, setOrderHistory, setSimulationHistory, setLoading } = usePortfolioStore();
+  const { portfolio, orderHistory, simulationHistory, isLoading, setPortfolio, setOrderHistory, setSimulationHistory, setLoading, setInitialBalance } = usePortfolioStore();
   const { addNotification } = useNotificationStore();
 
   useEffect(() => {
@@ -26,6 +26,7 @@ export function usePortfolio() {
       const initialBalance = planResult.isSuccess
         ? planResult.value!.initialVirtualBalance
         : 10_000;
+      setInitialBalance(initialBalance);
 
       const portfolioResult = await portfolioService.getPortfolio(initialBalance);
       if (portfolioResult.isSuccess) {
