@@ -1,24 +1,21 @@
 using TraderForge.Application.Common;
 using TraderForge.Application.DTOs;
-using TraderForge.Domain.Entities;
-using TraderForge.Domain.Interfaces;
-
+using TraderForge.Domain.Repositories;
+using TraderForge.Domain.Services;
 namespace TraderForge.Application.Handlers;
 
 public class LoginTraderQueryHandler
 {
-    
     private readonly IIdentityService _identityService;
     private readonly ITraderRepository _traderRepository;
 
-    public LoginTraderQueryHandler(IIdentityService identityService, ITraderRepository traderRepository)
-    {
+    public LoginTraderQueryHandler(IIdentityService identityService, ITraderRepository traderRepository) {
         _identityService = identityService;
         _traderRepository = traderRepository;
     }
 
 
-    public async Task<Result<string>> GetLoginTokenAsync(LoginTraderQuery query)
+    public async Task<ResultGeneric<string>> HandleAsync(LoginTraderQuery query)
     {
         try
         {
@@ -26,14 +23,14 @@ public class LoginTraderQueryHandler
         }
         catch (Exception ex)
         {
-            return Result<string>.Failure(ex.Message);
+            return ResultGeneric<string>.Failure(ex.Message);
         }
     }
 
-    private async Task<Result<string>> RequestTokenFromIdentity(LoginTraderQuery query)
+    private async Task<ResultGeneric<string>> RequestTokenFromIdentity(LoginTraderQuery query)
     {
         string jwtToken = await _identityService.GetValidatedTokenAsync(query.Email, query.Password);
-        return Result<string>.Success(jwtToken);
+        return ResultGeneric<string>.Success(jwtToken);
     }
 
 }
