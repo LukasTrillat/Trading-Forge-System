@@ -22,7 +22,14 @@ public class CachedMarketService : IMarketService
     
 public bool IsMarketOpen(string symbol)
     {
-        return true;
+        var estTime = GetCurrentEasternTime();
+        
+        if (IsWeekend(estTime))
+        {
+            return false;
+        }
+
+        return IsWithinTradingHours(estTime.TimeOfDay);
     }
 
     private DateTime GetCurrentEasternTime()
