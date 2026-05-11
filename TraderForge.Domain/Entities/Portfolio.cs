@@ -11,7 +11,9 @@ public class Portfolio
 
     
     public ICollection<Strategy> Strategies { get; private set; } = new List<Strategy>();
-    public ICollection<PortfolioAsset> PortfolioAssets { get; private set; } = new List<PortfolioAsset>();
+    public ICollection<Position> Positions { get; private set; } = new List<Position>();
+    public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
+    public ICollection<Order> Orders { get; private set; } = new List<Order>();
 
     public string TraderId { get; private set; }
     [JsonIgnore]
@@ -32,5 +34,26 @@ public class Portfolio
     {
         IsActive = false;
         ClosedAt = DateTime.UtcNow;
+    }
+
+    public void DeductFunds(decimal total, string type, string? symbol, decimal? qty, decimal? price, decimal commission)
+    {
+        var balanceBefore = VirtualBalance;
+        VirtualBalance -= total;
+
+        Transactions.Add(new Transaction(
+            Id, type, total, balanceBefore, VirtualBalance, commission, symbol, qty, price));
+
+        if (VirtualBalance <= 0)
+            FreezeSimulation();
+    }
+
+    public void AddFunds(decimal total, string type, string? symbol, decimal? qty, decimal? price, decimal commission)
+    {
+        var balanceBefore = VirtualBalance;
+        VirtualBalance += total;
+
+        Transactions.Add(new Transaction(
+            Id, type, total, balanceBefore, VirtualBalance, commission, symbol, qty, price));
     }
 }

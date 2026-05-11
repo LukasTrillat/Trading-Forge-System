@@ -1,6 +1,6 @@
 namespace TraderForge.Application.DTOs;
 
-public class GetPortfolioAssetsQuery
+public class GetTransactionsQuery
 {
     public string TraderId { get; set; }
 }

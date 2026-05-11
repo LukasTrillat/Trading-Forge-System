@@ -54,12 +54,12 @@ public class TraderRepository : ITraderRepository
             .FirstOrDefaultAsync(t => t.Id == id))!;
     }
 
-    public async Task<Trader> GetByIdIncludePlanAndAssetsAsync(string id)
+    public async Task<Trader> GetByIdIncludePlanAndPositionsAsync(string id)
     {
         return (await _dbContext.Traders
             .Include(t => t.SubscriptionPlan)
             .Include(t => t.Portfolios)
-            .ThenInclude(p => p.PortfolioAssets)
+            .ThenInclude(p => p.Positions)
             .FirstOrDefaultAsync(t => t.Id == id))!;
     }
 
