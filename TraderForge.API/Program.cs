@@ -127,7 +127,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000")
+        policyBuilder.WithOrigins("http://localhost:5173") // Changed to match Vite frontend port.
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
