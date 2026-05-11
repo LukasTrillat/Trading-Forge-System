@@ -3,6 +3,7 @@ using Moq;
 using TraderForge.API.Controllers;
 using TraderForge.API.Requests;
 using TraderForge.Application.Handlers;
+using TraderForge.Domain.Repositories;
 using TraderForge.Domain.Services;
 namespace TraderForge.API.Tests;
 
@@ -10,11 +11,14 @@ public class PricesControllerTests
 {
     private readonly PricesController _controller;
     private readonly Mock<IMarketService> _marketServiceMock;
+    private readonly Mock<IPriceSnapshotRepository> _snapshotRepoMock;
     public PricesControllerTests()
     {
         _marketServiceMock = new Mock<IMarketService>();
-        var handler = new GetMarketPricesQueryHandler(_marketServiceMock.Object);
-        _controller = new PricesController(handler);
+        _snapshotRepoMock = new Mock<IPriceSnapshotRepository>();
+        var pricesHandler = new GetMarketPricesQueryHandler(_marketServiceMock.Object);
+        var candlesHandler = new GetCandlesQueryHandler(_snapshotRepoMock.Object);
+        _controller = new PricesController(pricesHandler, candlesHandler);
     }
 
     [Fact]

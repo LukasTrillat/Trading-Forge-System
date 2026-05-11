@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TraderForge.Domain.Constants;
 using TraderForge.Domain.Entities;
 using TraderForge.Domain.Services;
-using TraderForge.Domain.Repositories;
+using TraderForge.Infrastructure.Persistence;
 
 namespace TraderForge.Infrastructure.Services;
 
@@ -29,7 +30,7 @@ public class BackgroundMarketPollingService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
 
         while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
         {
@@ -54,28 +55,40 @@ public class BackgroundMarketPollingService : BackgroundService
     
     private void SaveToCache(Dictionary<string, decimal> allPrices)
     {
-        _cache.Set(CacheKeys.MarketPrices, allPrices, TimeSpan.FromMinutes(1));
+        _cache.Set(CacheKeys.MarketPrices, allPrices, TimeSpan.FromSeconds(30));
     }
 
     private async Task SaveToDatabase(Dictionary<string, decimal> allPrices)
     {
         using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IMarketAssetRepository>();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var now = DateTime.UtcNow;
 
         foreach (var symbol in SupportedAssets.Symbols)
         {
-            if (allPrices.TryGetValue(symbol, out var price))
-            {
-                var asset = new MarketAsset
-                {
-                    Symbol = symbol, 
-                    Name = symbol, 
-                    CurrentPrice = price, 
-                    LastUpdated = DateTime.UtcNow
-                };
+            if (!allPrices.TryGetValue(symbol, out var price))
+                continue;
 
-                await repository.AddAsync(asset);
+            var existing = await db.MarketAssets.FirstOrDefaultAsync(a => a.Symbol == symbol);
+            if (existing != null)
+            {
+                existing.CurrentPrice = price;
+                existing.LastUpdated = now;
             }
+            else
+            {
+                db.MarketAssets.Add(new MarketAsset
+                {
+                    Symbol = symbol,
+                    Name = symbol,
+                    CurrentPrice = price,
+                    LastUpdated = now,
+                });
+            }
+
+            db.PriceSnapshots.Add(new PriceSnapshot(symbol, price, now));
         }
+
+        await db.SaveChangesAsync();
     }
 }

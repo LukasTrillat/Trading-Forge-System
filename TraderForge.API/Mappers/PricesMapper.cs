@@ -12,4 +12,13 @@ public static class PricesMapper
             Symbols = request.Symbols
         };
     }
+
+    public static GetCandlesQuery ToQuery(this GetCandlesRequest request)
+    {
+        return new GetCandlesQuery
+        {
+            Symbol = request.Symbol,
+            Interval = request.Interval,
+        };
+    }
 }

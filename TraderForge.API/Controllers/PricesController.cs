@@ -9,11 +9,15 @@ namespace TraderForge.API.Controllers;
 [Route("api/prices")]
 public class PricesController : ControllerBase
 {
-    private readonly GetMarketPricesQueryHandler _handler;
+    private readonly GetMarketPricesQueryHandler _pricesHandler;
+    private readonly GetCandlesQueryHandler _candlesHandler;
 
-    public PricesController(GetMarketPricesQueryHandler handler)
+    public PricesController(
+        GetMarketPricesQueryHandler pricesHandler,
+        GetCandlesQueryHandler candlesHandler)
     {
-        _handler = handler;
+        _pricesHandler = pricesHandler;
+        _candlesHandler = candlesHandler;
     }
 
     [HttpPost]
@@ -25,7 +29,22 @@ public class PricesController : ControllerBase
         }
 
         var query = request.ToQuery();
-        var result = await _handler.HandleAsync(query); 
+        var result = await _pricesHandler.HandleAsync(query); 
         return Ok(result.Value); 
+    }
+
+    [HttpPost("candles")]
+    public async Task<IActionResult> GetCandles([FromBody] GetCandlesRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Symbol))
+            return BadRequest("Symbol is required.");
+
+        var query = request.ToQuery();
+        var result = await _candlesHandler.HandleAsync(query);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.ErrorMessage });
+
+        return Ok(result.Value);
     }
 }

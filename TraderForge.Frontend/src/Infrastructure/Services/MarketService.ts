@@ -10,9 +10,31 @@ interface PricesResponse {
 const ASSET_NAMES: Record<string, string> = {
   BTCUSDT: 'Bitcoin',
   ETHUSDT: 'Ethereum',
-  SOLUSDT: 'Solana',
   BNBUSDT: 'BNB',
+  SOLUSDT: 'Solana',
   XRPUSDT: 'XRP',
+  ADAUSDT: 'Cardano',
+  AVAXUSDT: 'Avalanche',
+  DOTUSDT: 'Polkadot',
+  TRXUSDT: 'TRON',
+  LINKUSDT: 'Chainlink',
+  TAOUSDT: 'Bittensor',
+  RENDERUSDT: 'Render',
+  OPUSDT: 'Optimism',
+  ARBUSDT: 'Arbitrum',
+  IMXUSDT: 'Immutable',
+  STRKUSDT: 'Starknet',
+  SUIUSDT: 'Sui',
+  APTUSDT: 'Aptos',
+  SEIUSDT: 'Sei',
+  UNIUSDT: 'Uniswap',
+  AAVEUSDT: 'Aave',
+  MKRUSDT: 'Maker',
+  DOGEUSDT: 'Dogecoin',
+  PEPEUSDT: 'Pepe',
+  FLOKIUSDT: 'Floki',
+  LTCUSDT: 'Litecoin',
+  ATOMUSDT: 'Cosmos',
 };
 
 const INTERVAL_SECONDS: Record<CandleInterval, number> = {
@@ -28,11 +50,33 @@ const INTERVAL_VOLATILITY: Record<CandleInterval, number> = {
 const SUPPORTED_SYMBOLS = Object.keys(ASSET_NAMES);
 
 const FALLBACK_PRICES: Record<string, number> = {
-  BTCUSDT: 63200,
-  ETHUSDT: 4200,
-  SOLUSDT: 28.5,
-  BNBUSDT: 620,
-  XRPUSDT: 0.52,
+  BTCUSDT: 81500,
+  ETHUSDT: 2330,
+  BNBUSDT: 660,
+  SOLUSDT: 97,
+  XRPUSDT: 1.47,
+  ADAUSDT: 0.28,
+  AVAXUSDT: 10.18,
+  DOTUSDT: 1.37,
+  TRXUSDT: 0.35,
+  LINKUSDT: 10.58,
+  TAOUSDT: 321,
+  RENDERUSDT: 1.97,
+  OPUSDT: 0.16,
+  ARBUSDT: 0.14,
+  IMXUSDT: 0.19,
+  STRKUSDT: 0.05,
+  SUIUSDT: 1.30,
+  APTUSDT: 1.13,
+  SEIUSDT: 0.075,
+  UNIUSDT: 3.89,
+  AAVEUSDT: 102,
+  MKRUSDT: 1814,
+  DOGEUSDT: 0.11,
+  PEPEUSDT: 0.0000044,
+  FLOKIUSDT: 0.000037,
+  LTCUSDT: 58.81,
+  ATOMUSDT: 2.01,
 };
 
 function generateCandles(basePrice: number, interval: CandleInterval = '1h'): CandlestickBar[] {
@@ -135,11 +179,11 @@ export class MarketService {
 
   async getCandles(symbol: string, interval: CandleInterval = '1h'): Promise<Result<CandlestickBar[]>> {
     try {
-      const { data } = await httpClient.post<PricesResponse>('/api/prices', {
-        symbols: [symbol],
+      const { data } = await httpClient.post<CandlestickBar[]>('/api/prices/candles', {
+        symbol, interval,
       });
-      const price = data[symbol] ?? 100;
-      return Result.ok(generateCandles(price, interval));
+      if (data.length > 0) return Result.ok(data);
+      return Result.ok(generateCandles(100, interval));
     } catch {
       return Result.ok(generateCandles(100, interval));
     }

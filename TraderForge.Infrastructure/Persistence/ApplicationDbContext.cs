@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<Account>
     public DbSet<Position> Positions { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<PriceSnapshot> PriceSnapshots { get; set; }
     
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     

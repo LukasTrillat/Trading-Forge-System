@@ -90,6 +90,7 @@ builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ISubscriptionLimitGuard, SubscriptionLimitGuard>();
 builder.Services.AddScoped<ICommissionService, CommissionService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IPriceSnapshotRepository, PriceSnapshotRepository>();
 builder.Services.AddTransient<RegisterTraderCommandHandler>();
 builder.Services.AddTransient<LoginTraderQueryHandler>();
 builder.Services.AddTransient<ChangeSubscriptionCommandHandler>();
@@ -108,6 +109,7 @@ builder.Services.AddTransient<GetPositionsQueryHandler>();
 builder.Services.AddTransient<GetTransactionsQueryHandler>();
 builder.Services.AddTransient<ResetSimulationCommandHandler>();
 builder.Services.AddTransient<GetOrdersQueryHandler>();
+builder.Services.AddTransient<GetCandlesQueryHandler>();
 builder.Services.AddHostedService<TrialExpirationService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddControllers().AddJsonOptions(options =>

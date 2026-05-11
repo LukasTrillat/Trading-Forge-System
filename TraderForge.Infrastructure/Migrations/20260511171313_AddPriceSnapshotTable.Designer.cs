@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TraderForge.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TraderForge.Infrastructure.Persistence;
 namespace TraderForge.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260511171313_AddPriceSnapshotTable")]
+    partial class AddPriceSnapshotTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -173,7 +176,7 @@ namespace TraderForge.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Administrators", (string)null);
+                    b.ToTable("Administrators");
                 });
 
             modelBuilder.Entity("TraderForge.Domain.Entities.MarketAsset", b =>
@@ -200,7 +203,7 @@ namespace TraderForge.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MarketAssets", (string)null);
+                    b.ToTable("MarketAssets");
                 });
 
             modelBuilder.Entity("TraderForge.Domain.Entities.Order", b =>
@@ -453,7 +456,7 @@ namespace TraderForge.Infrastructure.Migrations
 
                     b.HasIndex("SubscriptionPlanId");
 
-                    b.ToTable("Traders", (string)null);
+                    b.ToTable("Traders");
                 });
 
             modelBuilder.Entity("TraderForge.Domain.Entities.Transaction", b =>
