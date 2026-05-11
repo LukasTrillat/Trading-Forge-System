@@ -35,7 +35,7 @@ export function usePlaceOrder() {
       return false;
     }
     setIsSubmitting(true);
-    const result = await tradingService.placeOrder(command);
+    const result = await tradingService.placeOrder(command, currentPrice);
     setIsSubmitting(false);
     if (!result.isSuccess) {
       addNotification('error', result.errorMessage ?? 'Order failed.');
@@ -44,7 +44,7 @@ export function usePlaceOrder() {
     const order = result.value!;
     addNotification('success', `${order.side} ${order.quantity} ${order.symbol} @ $${order.price.toFixed(2)}`);
     setOrderHistory([order, ...orderHistory]);
-    const refreshed = await portfolioService.getPortfolio(command.traderId);
+    const refreshed = await portfolioService.getPortfolio('');
     if (refreshed.isSuccess) setPortfolio(refreshed.value!);
     return true;
   }

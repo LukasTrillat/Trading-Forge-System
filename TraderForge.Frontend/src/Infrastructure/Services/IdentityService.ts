@@ -17,8 +17,8 @@ async login(query: LoginTraderQuery): Promise<Result<string>> {
         return Result.ok(token);
       }
       return Result.fail('The server returned success, but no token was found in the response.');
-    } catch (error: unknown) {
-      return Result.fail(extractErrorMessage(error, 'Invalid credentials.'));
+    } catch (error: any) {
+      return Result.fail(error.response?.data?.error || error.message || 'Invalid credentials.');
     }
   }
 

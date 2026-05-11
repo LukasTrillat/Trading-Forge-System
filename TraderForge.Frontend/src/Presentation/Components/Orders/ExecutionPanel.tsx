@@ -4,9 +4,10 @@ import { useTrading } from '../../../Application/Handlers/useTrading';
 interface ExecutionPanelProps {
   selectedSymbol: string | null;
   availableBalance: number;
+  currentPrice: number;
 }
 
-export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, availableBalance }) => {
+export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, availableBalance, currentPrice }) => {
   const { placeOrder, isLoading, error } = useTrading();
   const [side, setSide] = useState<'Buy' | 'Sell'>('Buy');
   const [quantity, setQuantity] = useState<number>(0);
@@ -20,12 +21,12 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, 
       side,
       quantity,
       type: orderType,
-    });
+    }, currentPrice);
   };
 
   if (!selectedSymbol) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500 text-sm italic p-4 text-center">
+      <div className="h-full flex items-center justify-center text-neutral-500 text-sm italic p-4 text-center">
         Select an asset from the dashboard to enable trading controls
       </div>
     );
@@ -33,11 +34,11 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, 
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex bg-gray-900 p-1 rounded-lg border border-gray-700">
+      <div className="flex bg-neutral-950 p-1 rounded-lg border border-neutral-800">
         <button
           onClick={() => setSide('Buy')}
           className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
-            side === 'Buy' ? 'bg-emerald-600 text-white' : 'text-gray-500 hover:text-white'
+            side === 'Buy' ? 'bg-emerald-600 text-white' : 'text-neutral-500 hover:text-white'
           }`}
         >
           BUY
@@ -45,7 +46,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, 
         <button
           onClick={() => setSide('Sell')}
           className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
-            side === 'Sell' ? 'bg-red-600 text-white' : 'text-gray-500 hover:text-white'
+            side === 'Sell' ? 'bg-red-600 text-white' : 'text-neutral-500 hover:text-white'
           }`}
         >
           SELL
@@ -54,11 +55,11 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, 
 
       <div className="space-y-4">
         <div>
-          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Order Type</label>
+          <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest block mb-2">Order Type</label>
           <select 
             value={orderType}
             onChange={(e) => setOrderType(e.target.value as any)}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
           >
             <option value="Market">Market Order</option>
             <option value="Limit">Limit Order</option>
@@ -66,24 +67,24 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, 
         </div>
 
         <div>
-          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Quantity ({selectedSymbol})</label>
+          <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest block mb-2">Quantity ({selectedSymbol})</label>
           <input
             type="number"
             value={quantity || ''}
             onChange={(e) => setQuantity(parseFloat(e.target.value))}
             placeholder="0.00"
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500 font-mono"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500 font-mono"
           />
         </div>
       </div>
 
-      <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800 space-y-2">
+      <div className="bg-neutral-950/50 p-4 rounded-lg border border-neutral-800 space-y-2">
         <div className="flex justify-between text-xs">
-          <span className="text-gray-500">Est. Total</span>
-          <span className="text-white font-mono">$0.00</span>
+          <span className="text-neutral-500">Est. Total</span>
+          <span className="text-white font-mono">${(currentPrice * quantity || 0).toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-xs">
-          <span className="text-gray-500">Available Power</span>
+          <span className="text-neutral-500">Available Power</span>
           <span className="text-blue-400 font-mono">${availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
         </div>
       </div>

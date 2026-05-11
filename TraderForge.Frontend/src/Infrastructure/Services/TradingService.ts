@@ -5,23 +5,52 @@ import { httpClient } from '../Http/httpClient';
 
 export class TradingService {
   
-  async placeOrder(command: PlaceOrderCommand): Promise<Result<Order>> {
+  async placeOrder(command: PlaceOrderCommand, currentPrice: number): Promise<Result<Order>> {
     try {
-      // Corrected endpoints to match PortfolioController.cs exactly
-      const endpoint = command.side === 'Buy' 
-        ? '/api/portfolio/positions/buy' 
-        : `/api/portfolio/positions/${command.symbol}/sell`; // Adjust based on if your sell logic uses symbol or id
-      
-      const response = await httpClient.post<Order>(endpoint, {
-        assetSymbol: command.symbol,
-        quantity: command.quantity,
-        orderType: command.type,
-        limitPrice: command.limitPrice
-      });
-      
-      return Result.ok(response.data);
+      if (command.side === 'Buy') {
+        return await this.executeBuy(command, currentPrice);
+      } else {
+        return await this.executeSell(command);
+      }
     } catch (error: any) {
       return Result.fail(error.response?.data?.error || `Order execution failed.`);
+    }
+  }
+
+  private async executeBuy(command: PlaceOrderCommand, currentPrice: number): Promise<Result<Order>> {
+    const entryPrice = command.type === 'Limit' && command.limitPrice ? command.limitPrice : currentPrice;
+
+    const { data } = await httpClient.post<Order>('/api/portfolio/positions/buy', {
+      symbol: command.symbol,
+      quantity: command.quantity,
+      entryPrice,
+    });
+
+    return Result.ok(data);
+  }
+
+  private async executeSell(command: PlaceOrderCommand): Promise<Result<Order>> {
+    const positionId = await this.resolvePositionId(command.symbol);
+    if (!positionId) {
+      return Result.fail(`No open position found for ${command.symbol}.`);
+    }
+
+    const { data } = await httpClient.post<Order>(`/api/portfolio/positions/${positionId}/sell`, {
+      quantity: command.quantity,
+    });
+
+    return Result.ok(data);
+  }
+
+  private async resolvePositionId(symbol: string): Promise<string | null> {
+    try {
+      const { data } = await httpClient.get<any>('/api/portfolio/active');
+      const position = (data.positions ?? []).find(
+        (p: any) => p.symbol?.toUpperCase() === symbol.toUpperCase()
+      );
+      return position?.id ?? null;
+    } catch {
+      return null;
     }
   }
 
