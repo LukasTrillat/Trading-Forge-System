@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useAuthStore } from '../Store/authStore';
 import type { RegisterTraderCommand } from '../DTOs/Commands/RegisterTraderCommand';
 import type { LoginTraderQuery } from '../DTOs/Queries/LoginTraderQuery';
+import { IdentityService } from '../../Infrastructure/Services/IdentityService';
 
-// NOTE: We are intentionally NOT using IdentityService right now to avoid backend dependency
-// import { IdentityService } from '../../Infrastructure/Services/IdentityService';
-// const identityService = new IdentityService();
+// Instantiate the real service we set up earlier
+const identityService = new IdentityService();
 
 export function useAuth() {
   const { setToken, logout, isAuthenticated, trader } = useAuthStore();
@@ -16,35 +16,36 @@ export function useAuth() {
     setIsLoading(true);
     setError(null);
     
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Call the real C# backend via IdentityService
+    const result = await identityService.register(command);
     
-    // Mock successful registration
-    console.log('[MOCK AUTH] Registered:', command.email);
     setIsLoading(false);
-    return true;
+    if (result.isSuccess) {
+      return true;
+    } else {
+      setError(result.error || 'Registration failed');
+      return false;
+    }
   }
 
-  async function login(query: LoginTraderQuery): Promise<boolean> {
+async function login(query: LoginTraderQuery): Promise<boolean> {
     setIsLoading(true);
     setError(null);
     
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Mock successful login - just check if it's not empty for the mock
-    if (query.email && query.password) {
-      console.log('[MOCK AUTH] Logged in:', query.email);
-      // Se da la token al store de autenticación para simular que se inicia sesion
-      setToken('mock-jwt-token-for-' + query.email);
-      setIsLoading(false);
-      return true;
-    }
-
+    const result = await identityService.login(query);
+    
     setIsLoading(false);
-    setError('Invalid credentials.');
-    return false;
+    
+    if (result.isSuccess && result.value?.token) {
+      setToken(result.value.token);
+      return true;
+    } else {
+      // This will now show the actual error (e.g., "Password mismatch") or the login failure
+      setError(result.error || 'Login failed.');
+      return false;
+    }
   }
+
 
   return { register, login, logout, isAuthenticated, trader, isLoading, error };
 }

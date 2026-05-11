@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { usePortfolio } from '../../../Application/Handlers/usePortfolio';
 import { useMarketData } from '../../../Application/Handlers/useMarketData';
-import ExecutionPanel from '../../Components/Orders/ExecutionPanel';
-import CandlestickChart from '../../Components/Charts/CandlestickChart';
+import { ExecutionPanel } from '../../Components/Orders/ExecutionPanel';
+import { CandlestickChart } from '../../Components/Charts/CandlestickChart';
 
 export const DashboardPage: React.FC = () => {
   const { portfolio, fetchPortfolio, isLoading } = usePortfolio();

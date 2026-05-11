@@ -1,32 +1,44 @@
-import type { RegisterTraderCommand } from '../../Application/DTOs/Commands/RegisterTraderCommand';
-import type { LoginTraderQuery } from '../../Application/DTOs/Queries/LoginTraderQuery';
 import { Result } from '../../Application/Common/Result';
 import { httpClient } from '../Http/httpClient';
+import { TokenRepository } from '../Repositories/TokenRepository';
+import type { LoginTraderQuery } from '../../Application/DTOs/Queries/LoginTraderQuery';
+import type { RegisterTraderCommand } from '../../Application/DTOs/Commands/RegisterTraderCommand';
 
-/** Real implementation — calls the live backend identity endpoints. */
 export class IdentityService {
+  
+async login(query: LoginTraderQuery): Promise<Result<any>> {
+    try {
+      const response = await httpClient.post('/api/identity/login', query);
+      const data = response.data;
+
+      // Robust check for the token key (handles both "token" and "Token")
+      const token = data.token || data.Token;
+
+      if (token) {
+        TokenRepository.set(token);
+        return Result.ok({ token }); // Explicitly return it as lowercase for useAuth
+      }
+      
+      return Result.fail('Backend returned success but no token was found.');
+    } catch (error: any) {
+      // Look specifically for the error key returned by IdentityController
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Login failed.';
+      return Result.fail(errorMessage);
+    }
+  }
+
+
   async register(command: RegisterTraderCommand): Promise<Result<void>> {
     try {
       await httpClient.post('/api/identity/register', command);
       return Result.ok(undefined);
-    } catch (error: unknown) {
-      return Result.fail(extractErrorMessage(error, 'Registration failed.'));
+    } catch (error: any) {
+      return Result.fail(error.response?.data?.message || 'Registration failed.');
     }
   }
 
-  async login(query: LoginTraderQuery): Promise<Result<string>> {
-    try {
-      const { data } = await httpClient.post<{ token: string }>('/api/identity/login', query);
-      return Result.ok(data.token);
-    } catch (error: unknown) {
-      return Result.fail(extractErrorMessage(error, 'Invalid credentials.'));
-    }
+  logout(): void {
+    TokenRepository.clear();
+    window.location.href = '/login';
   }
-}
-
-function extractErrorMessage(error: unknown, fallback: string): string {
-  const e = error as { response?: { data?: { error?: string } }; code?: string; message?: string };
-  if (e?.response?.data?.error) return e.response.data.error;
-  if (e?.code === 'ERR_NETWORK' || !e?.response) return 'Cannot reach the server. Make sure the backend is running on port 5116.';
-  return fallback;
 }
