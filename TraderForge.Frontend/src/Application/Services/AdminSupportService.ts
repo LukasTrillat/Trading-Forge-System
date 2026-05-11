@@ -1,14 +1,26 @@
 import { SupportMessage } from '../../Domain/Entities/SupportMessage';
-import { httpClient } from '../../Infrastructure/Http/httpClient';
 
 export class AdminSupportService {
   public async getAllMessages(): Promise<SupportMessage[]> {
-    try {
-      const response = await httpClient.get<SupportMessage[]>('/api/admin/support');
-      return response.data;
-    } catch (error) {
-      console.warn("Backend for support messages not implemented yet. Returning empty array.");
-      return [];
-    }
+    const messages: SupportMessage[] = [
+      {
+        id: '1',
+        userEmail: 'trader123@example.com',
+        subject: 'Issue with portfolio balance',
+        content: 'My virtual balance is not updating after closing a trade.',
+        sentAt: '2026-05-09T10:30:00Z',
+        isResolved: false
+      },
+      {
+        id: '2',
+        userEmail: 'newuser@domain.com',
+        subject: 'Basic plan question',
+        content: 'Does the basic plan include access to strategy templates?',
+        sentAt: '2026-05-08T14:15:00Z',
+        isResolved: true
+      }
+    ];
+
+    return messages;
   }
 }
