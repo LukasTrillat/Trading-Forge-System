@@ -4,10 +4,9 @@ import { useTrading } from '../../../Application/Handlers/useTrading';
 interface ExecutionPanelProps {
   selectedSymbol: string | null;
   availableBalance: number;
-  currentPrice: number;
 }
 
-export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, availableBalance, currentPrice }) => {
+export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, availableBalance }) => {
   const { placeOrder, isLoading, error } = useTrading();
   const [side, setSide] = useState<'Buy' | 'Sell'>('Buy');
   const [quantity, setQuantity] = useState<number>(0);
@@ -21,7 +20,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, 
       side,
       quantity,
       type: orderType,
-    }, currentPrice);
+    });
   };
 
   if (!selectedSymbol) {

@@ -170,8 +170,7 @@ export const DashboardPage: React.FC = () => {
             <div className="p-6 flex-1 overflow-y-auto">
               <ExecutionPanel 
                 selectedSymbol={selectedAsset?.symbol || null} 
-                availableBalance={portfolio?.virtualBalance || 0}
-                currentPrice={selectedAsset?.currentPrice || 0}
+                availableBalance={portfolio?.virtualBalance || 0} 
               />
             </div>
           </div>

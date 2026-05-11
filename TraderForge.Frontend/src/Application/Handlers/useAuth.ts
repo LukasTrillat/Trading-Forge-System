@@ -16,7 +16,7 @@ export function useAuth() {
     setError(null);
     const result = await identityService.register(command);
     setIsLoading(false);
-    if (!result.isSuccess) setError(result.errorMessage || 'Registration failed.');
+    if (!result.isSuccess) setError(result.error || 'Registration failed.');
     return result.isSuccess;
   }
 
@@ -33,7 +33,7 @@ export function useAuth() {
       setToken(result.value); // result.value is the actual JWT string
       return true;
     } else {
-      setError(result.errorMessage || 'Login failed.');
+      setError(result.error || 'Login failed.');
       return false;
     }
   }

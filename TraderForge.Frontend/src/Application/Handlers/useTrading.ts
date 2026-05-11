@@ -10,18 +10,19 @@ export function useTrading() {
     const [error, setError] = useState<string | null>(null);
     const { refreshPortfolio } = usePortfolio();
 
-    const placeOrder = useCallback(async (command: PlaceOrderCommand, currentPrice: number) => {
+    const placeOrder = useCallback(async (command: PlaceOrderCommand) => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const result = await tradingService.placeOrder(command, currentPrice);
+            const result = await tradingService.placeOrder(command);
 
             if (result.isSuccess) {
+                // Refresh balance immediately after a successful trade
                 await refreshPortfolio();
                 return true;
             } else {
-                setError(result.errorMessage || 'Transaction failed');
+                setError(result.error || 'Transaction failed');
                 return false;
             }
         } catch (err) {
