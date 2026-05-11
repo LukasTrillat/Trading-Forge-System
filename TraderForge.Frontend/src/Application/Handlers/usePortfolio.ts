@@ -1,41 +1,34 @@
-import { useEffect } from 'react';
-import { usePortfolioStore } from '../Store/portfolioStore';
-import { PortfolioService } from '../../Infrastructure/Services/PortfolioService';
-import { TradingService } from '../../Infrastructure/Services/TradingService';
-import { useNotificationStore } from '../Store/notificationStore';
+import { useState, useEffect, useCallback } from 'react';
+import { httpClient } from '../../Infrastructure/Http/httpClient';
 
-const portfolioService = new PortfolioService();
-const tradingService = new TradingService();
+interface Portfolio {
+  virtualBalance: number;
+  traderId: string;
+  isActive: boolean;
+}
 
-export function usePortfolio(traderId = 'mock-trader-id') {
-  const { portfolio, orderHistory, simulationHistory, isLoading,
-    setPortfolio, setOrderHistory, setSimulationHistory, setLoading } = usePortfolioStore();
-  const { addNotification } = useNotificationStore();
+export function usePortfolio() {
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshPortfolio = useCallback(async () => {
+    try {
+      const { data } = await httpClient.get<Portfolio>('/api/portfolio/active');
+      setPortfolio(data);
+    } catch (error) {
+      console.error('Failed to fetch portfolio balance');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      portfolioService.getPortfolio(traderId),
-      portfolioService.getSimulationHistory(traderId),
-      tradingService.getOrderHistory(traderId),
-    ]).then(([portfolioResult, historyResult, ordersResult]) => {
-      if (portfolioResult.isSuccess) setPortfolio(portfolioResult.value!);
-      if (historyResult.isSuccess) setSimulationHistory(historyResult.value!);
-      if (ordersResult.isSuccess) setOrderHistory(ordersResult.value!);
-      setLoading(false);
-    });
-  }, [traderId]);
+    refreshPortfolio();
+  }, [refreshPortfolio]);
 
-  async function resetSimulation() {
-    const result = await portfolioService.resetSimulation(traderId);
-    if (result.isSuccess) {
-      addNotification('success', 'Simulation reset. Balance restored to plan default.');
-      const refreshed = await portfolioService.getPortfolio(traderId);
-      if (refreshed.isSuccess) setPortfolio(refreshed.value!);
-    } else {
-      addNotification('error', result.errorMessage ?? 'Reset failed.');
-    }
-  }
-
-  return { portfolio, orderHistory, simulationHistory, isLoading, resetSimulation };
+  return {
+    portfolio,
+    isLoading,
+    refreshPortfolio
+  };
 }

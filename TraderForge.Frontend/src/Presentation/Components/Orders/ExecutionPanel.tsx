@@ -1,167 +1,110 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import type { Asset } from '../../../Domain/Entities/Asset';
-import type { OrderSide, OrderType } from '../../../Domain/Entities/Order';
-import { usePlaceOrder } from '../../../Application/Handlers/usePlaceOrder';
-import { usePortfolioStore } from '../../../Application/Store/portfolioStore';
-import { COMMISSION_RATE } from '../../../Application/Common/constants';
-import { Button } from '../UI/Button';
-import { Input } from '../UI/Input';
+import React, { useState } from 'react';
+import { useTrading } from '../../../Application/Handlers/useTrading';
 
 interface ExecutionPanelProps {
-  selectedAsset: Asset | null;
+  selectedSymbol: string | null;
+  availableBalance: number;
 }
 
-/**
- * Order entry panel supporting Market and Limit order types.
- * Validates balance (BR-1, BR-6) before submission.
- */
-export function ExecutionPanel({ selectedAsset }: ExecutionPanelProps) {
-  const [side, setSide] = useState<OrderSide>('Buy');
-  const [orderType, setOrderType] = useState<OrderType>('Market');
-  const [quantity, setQuantity] = useState('');
-  const [limitPrice, setLimitPrice] = useState('');
+export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({ selectedSymbol, availableBalance }) => {
+  const { placeOrder, isLoading, error } = useTrading();
+  const [side, setSide] = useState<'Buy' | 'Sell'>('Buy');
+  const [quantity, setQuantity] = useState<number>(0);
+  const [orderType, setOrderType] = useState<'Market' | 'Limit'>('Market');
 
-  const { placeOrder, isSubmitting } = usePlaceOrder();
-  const { portfolio } = usePortfolioStore();
+  const handleExecute = async () => {
+    if (!selectedSymbol || quantity <= 0) return;
+    
+    await placeOrder({
+      symbol: selectedSymbol,
+      side,
+      quantity,
+      type: orderType,
+    });
+  };
 
-  const price = orderType === 'Market'
-    ? (selectedAsset?.currentPrice ?? 0)
-    : (parseFloat(limitPrice) || 0);
-
-  const qty = parseFloat(quantity) || 0;
-  const commission = qty * price * COMMISSION_RATE;
-  const estimatedTotal = side === 'Buy' ? qty * price + commission : qty * price - commission;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedAsset || qty <= 0) return;
-
-    const success = await placeOrder(
-      {
-        traderId: 'mock-trader-id',
-        symbol: selectedAsset.symbol,
-        side,
-        type: orderType,
-        quantity: qty,
-        limitPrice: orderType === 'Limit' ? parseFloat(limitPrice) : undefined,
-      },
-      selectedAsset.currentPrice
+  if (!selectedSymbol) {
+    return (
+      <div className="h-full flex items-center justify-center text-gray-500 text-sm italic p-4 text-center">
+        Select an asset from the dashboard to enable trading controls
+      </div>
     );
-
-    if (success) {
-      setQuantity('');
-      setLimitPrice('');
-    }
   }
 
   return (
-    <div className="bg-neutral-900 rounded-lg p-4 flex flex-col gap-4">
-      <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Execute Order</h3>
+    <div className="flex flex-col gap-6">
+      <div className="flex bg-gray-900 p-1 rounded-lg border border-gray-700">
+        <button
+          onClick={() => setSide('Buy')}
+          className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
+            side === 'Buy' ? 'bg-emerald-600 text-white' : 'text-gray-500 hover:text-white'
+          }`}
+        >
+          BUY
+        </button>
+        <button
+          onClick={() => setSide('Sell')}
+          className={`flex-1 py-2 rounded-md text-xs font-bold transition-all ${
+            side === 'Sell' ? 'bg-red-600 text-white' : 'text-gray-500 hover:text-white'
+          }`}
+        >
+          SELL
+        </button>
+      </div>
 
-      {!selectedAsset && (
-        <p className="text-sm text-neutral-600 text-center py-4">Select an asset to trade</p>
-      )}
-
-      {selectedAsset && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Buy / Sell toggle */}
-          <div className="flex rounded-lg overflow-hidden border border-neutral-800">
-            {(['Buy', 'Sell'] as OrderSide[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSide(s)}
-                className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-                  side === s
-                    ? s === 'Buy' ? 'bg-emerald-500 text-neutral-950' : 'bg-red-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-300'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          {/* Order type toggle */}
-          <div className="flex gap-2">
-            {(['Market', 'Limit'] as OrderType[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setOrderType(t)}
-                className={`px-3 py-1 text-xs rounded-md border transition-colors ${
-                  orderType === t
-                    ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
-                    : 'border-neutral-700 text-neutral-500 hover:border-neutral-600'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <Input
-            label="Quantity"
-            type="number"
-            min="0"
-            step="any"
-            placeholder="0.00"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-          />
-
-          {orderType === 'Limit' && (
-            <Input
-              label="Limit Price"
-              type="number"
-              min="0"
-              step="any"
-              placeholder={selectedAsset.currentPrice.toFixed(2)}
-              value={limitPrice}
-              onChange={(e) => setLimitPrice(e.target.value)}
-            />
-          )}
-
-          {/* Summary */}
-          {qty > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-xs space-y-1 p-3 bg-neutral-800 rounded-lg border border-neutral-700"
-            >
-              <div className="flex justify-between text-neutral-400">
-                <span>Price</span>
-                <span className="font-mono">${price.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-neutral-400">
-                <span>Commission (0.1%)</span>
-                <span className="font-mono">${commission.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-neutral-100 font-semibold border-t border-neutral-700 pt-1 mt-1">
-                <span>Total</span>
-                <span className="font-mono">${estimatedTotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-neutral-500">
-                <span>Balance after</span>
-                <span className={`font-mono ${(portfolio?.virtualBalance ?? 0) - (side === 'Buy' ? estimatedTotal : 0) < 0 ? 'text-red-400' : ''}`}>
-                  ${((portfolio?.virtualBalance ?? 0) - (side === 'Buy' ? estimatedTotal : -estimatedTotal)).toFixed(2)}
-                </span>
-              </div>
-            </motion.div>
-          )}
-
-          <Button
-            type="submit"
-            isLoading={isSubmitting}
-            disabled={!qty || qty <= 0}
-            variant={side === 'Buy' ? 'primary' : 'danger'}
-            className={side === 'Sell' ? 'bg-red-500 hover:bg-red-400 text-white border-0' : ''}
+      <div className="space-y-4">
+        <div>
+          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Order Type</label>
+          <select 
+            value={orderType}
+            onChange={(e) => setOrderType(e.target.value as any)}
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
           >
-            {side === 'Buy' ? 'Buy' : 'Sell'} {selectedAsset.symbol}
-          </Button>
-        </form>
+            <option value="Market">Market Order</option>
+            <option value="Limit">Limit Order</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Quantity ({selectedSymbol})</label>
+          <input
+            type="number"
+            value={quantity || ''}
+            onChange={(e) => setQuantity(parseFloat(e.target.value))}
+            placeholder="0.00"
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500 font-mono"
+          />
+        </div>
+      </div>
+
+      <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800 space-y-2">
+        <div className="flex justify-between text-xs">
+          <span className="text-gray-500">Est. Total</span>
+          <span className="text-white font-mono">$0.00</span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-gray-500">Available Power</span>
+          <span className="text-blue-400 font-mono">${availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+        </div>
+      </div>
+
+      <button
+        disabled={isLoading || quantity <= 0}
+        onClick={handleExecute}
+        className={`w-full py-4 rounded-xl font-black text-sm shadow-xl transition-all active:scale-95 ${
+          side === 'Buy' 
+            ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' 
+            : 'bg-red-600 hover:bg-red-500 shadow-red-900/20'
+        } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
+      >
+        {isLoading ? 'EXECUTING...' : `CONFIRM ${side} ${selectedSymbol}`}
+      </button>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
+          <p className="text-red-400 text-[10px] text-center font-bold uppercase tracking-tight">{error}</p>
+        </div>
       )}
     </div>
   );
-}
+};

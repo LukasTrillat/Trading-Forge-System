@@ -1,10 +1,7 @@
-import type { OrderSide, OrderType } from '../../../Domain/Entities/Order';
-
 export interface PlaceOrderCommand {
-  traderId: string;
   symbol: string;
-  side: OrderSide;
-  type: OrderType;
+  side: 'Buy' | 'Sell';
   quantity: number;
+  type: 'Market' | 'Limit';
   limitPrice?: number;
 }
