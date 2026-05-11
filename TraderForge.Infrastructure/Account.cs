@@ -5,4 +5,5 @@ namespace TraderForge.Infrastructure;
 public class Account : IdentityUser
 {
     
+    
 }

@@ -16,7 +16,7 @@ public interface ITraderRepository
 
     Task<Trader> GetByIdIncludePlanAndStrategyAsync(string id);
 
-    Task<Trader> GetByIdIncludePlanAndAssetsAsync(string id);
+    Task<Trader> GetByIdIncludePlanAndPositionsAsync(string id);
 
     Task<List<Trader>> GetExpiredTrialsAsync();
     

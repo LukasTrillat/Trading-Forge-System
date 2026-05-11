@@ -32,7 +32,7 @@ public class SubscriptionLimitGuard : ISubscriptionLimitGuard
 
     public async Task<bool> CanAddAssetAsync(string traderId)
     {
-        var trader = await _traderRepository.GetByIdIncludePlanAndAssetsAsync(traderId);
+        var trader = await _traderRepository.GetByIdIncludePlanAndPositionsAsync(traderId);
         if (trader?.SubscriptionPlan == null)
             return false;
 
@@ -41,7 +41,7 @@ public class SubscriptionLimitGuard : ISubscriptionLimitGuard
             return true;
 
         var activeAssets = trader.Portfolios
-            .SelectMany(p => p.PortfolioAssets)
+            .SelectMany(p => p.Positions)
             .Count();
 
         return activeAssets < plan.MaxActiveAssets;
@@ -71,11 +71,11 @@ public class SubscriptionLimitGuard : ISubscriptionLimitGuard
 
         if (!newPlan.HasUnlimitedAssets())
         {
-            var traderWithAssets = await _traderRepository.GetByIdIncludePlanAndAssetsAsync(traderId);
+            var traderWithAssets = await _traderRepository.GetByIdIncludePlanAndPositionsAsync(traderId);
             if (traderWithAssets != null)
             {
                 var activeAssets = traderWithAssets.Portfolios
-                    .SelectMany(p => p.PortfolioAssets)
+                    .SelectMany(p => p.Positions)
                     .Count();
 
                 if (activeAssets > newPlan.MaxActiveAssets)
