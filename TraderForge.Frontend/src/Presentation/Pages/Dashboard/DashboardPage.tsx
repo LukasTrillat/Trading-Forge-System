@@ -4,9 +4,14 @@ import { useMarketData } from '../../../Application/Handlers/useMarketData';
 import { ExecutionPanel } from '../../Components/Orders/ExecutionPanel';
 import { CandlestickChart } from '../../Components/Charts/CandlestickChart';
 
+/**
+ * DashboardPage - Main view for market monitoring and trade execution.
+ */
 export const DashboardPage: React.FC = () => {
+  // Real-time portfolio data (Balance, etc.)
   const { portfolio, isLoading: portfolioLoading } = usePortfolio();
   
+  // Market data (Assets list, Tabs, Selection logic)
   const { 
     assets, 
     watchedAssets, 
@@ -16,6 +21,7 @@ export const DashboardPage: React.FC = () => {
     addToWatchlist 
   } = useMarketData();
 
+  // Effect: If no asset is selected, automatically select the first one in your tabs
   useEffect(() => {
     if (!selectedAsset && watchedAssets.length > 0) {
       handleSelectAsset(watchedAssets[0]);
@@ -24,22 +30,22 @@ export const DashboardPage: React.FC = () => {
 
   if (portfolioLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-neutral-950 text-white">
+      <div className="flex items-center justify-center h-full bg-gray-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-neutral-400 font-medium">Syncing with secure vault...</p>
+          <p className="text-gray-400 font-medium">Syncing with secure vault...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-neutral-950 text-white overflow-hidden font-sans">
+    <div className="flex flex-col h-full bg-gray-900 text-white overflow-hidden font-sans">
       
       {/* --- TOP NAVIGATION: Tabs & Add Asset --- */}
-      <div className="flex items-center gap-2 p-4 border-b border-neutral-800 bg-neutral-900 overflow-x-auto min-h-[73px] shadow-sm">
+      <div className="flex items-center gap-2 p-4 border-b border-gray-800 bg-gray-850 overflow-x-auto min-h-[73px] shadow-sm">
         <div className="flex items-center mr-4">
-          <span className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] border-r border-neutral-700 pr-4 mr-2">
+          <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-r border-gray-700 pr-4 mr-2">
             Terminal
           </span>
         </div>
@@ -53,7 +59,7 @@ export const DashboardPage: React.FC = () => {
               className={`px-5 py-2 rounded-md font-bold text-sm transition-all border ${
                 selectedAsset?.symbol === asset.symbol 
                   ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]' 
-                  : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-750 hover:text-white'
               }`}
             >
               {asset.symbol}
@@ -78,12 +84,12 @@ export const DashboardPage: React.FC = () => {
             <option value="" disabled>+ Add Market</option>
             {unwatchedAssets.length > 0 ? (
               unwatchedAssets.map(asset => (
-                <option key={asset.symbol} value={asset.symbol} className="bg-neutral-800 text-white py-2">
+                <option key={asset.symbol} value={asset.symbol} className="bg-gray-800 text-white py-2">
                   {asset.symbol} — ${asset.currentPrice?.toLocaleString() ?? '0.00'}
                 </option>
               ))
             ) : (
-              <option disabled className="text-neutral-500 bg-neutral-800">All assets added</option>
+              <option disabled className="text-gray-500 bg-gray-800">All assets added</option>
             )}
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white text-xs">
@@ -96,7 +102,7 @@ export const DashboardPage: React.FC = () => {
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
         
         {/* 1. LEFT COLUMN: Market Chart */}
-        <div className="flex-1 bg-neutral-900 rounded-xl p-6 flex flex-col shadow-2xl border border-neutral-800 relative">
+        <div className="flex-1 bg-gray-850 rounded-xl p-6 flex flex-col shadow-2xl border border-gray-800 relative">
           <div className="flex justify-between items-start mb-8">
             <div>
               <div className="flex items-center gap-3 mb-1">
@@ -113,20 +119,20 @@ export const DashboardPage: React.FC = () => {
             </div>
             
             <div className="text-right">
-              <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest block mb-1">Market Volatility</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Market Volatility</span>
               <div className="flex gap-1 justify-end">
                 <div className="w-1 h-3 bg-emerald-500 rounded-full"></div>
                 <div className="w-1 h-3 bg-emerald-500 rounded-full"></div>
-                <div className="w-1 h-3 bg-neutral-700 rounded-full"></div>
+                <div className="w-1 h-3 bg-gray-700 rounded-full"></div>
               </div>
             </div>
           </div>
           
-          <div className="flex-1 min-h-0 bg-neutral-950/50 rounded-lg border border-neutral-800/50">
+          <div className="flex-1 min-h-0 bg-gray-900/50 rounded-lg border border-gray-800/50">
             {selectedAsset?.symbol ? (
               <CandlestickChart symbol={selectedAsset.symbol} />
             ) : (
-              <div className="h-full flex items-center justify-center text-neutral-600 italic border-2 border-dashed border-neutral-800 rounded-lg m-4">
+              <div className="h-full flex items-center justify-center text-gray-600 italic border-2 border-dashed border-gray-800 rounded-lg m-4">
                 Pick a symbol from the top bar to initialize chart data
               </div>
             )}
@@ -155,9 +161,9 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Execution Panel */}
-          <div className="bg-neutral-900 rounded-xl flex-1 shadow-2xl border border-neutral-800 overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-neutral-800 bg-neutral-800/30 flex justify-between items-center">
-              <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Execution Engine</h4>
+          <div className="bg-gray-850 rounded-xl flex-1 shadow-2xl border border-gray-800 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-800 bg-gray-800/30 flex justify-between items-center">
+              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Execution Engine</h4>
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
             </div>
             
